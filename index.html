@@ -105,10 +105,7 @@
           reactiveUtils
             .whenOnce(() => !layerView.updating)
             .then(() => {
-              // Query layer view statistics as the user clicks
-              // or drags the pointer across the view.
               view.on(["click", "drag"], (event) => {
-                // disables navigation by pointer drag
                 event.stopPropagation();
                 queryStatsOnDrag(layerView, event)
                   .then(updateCharts)
@@ -125,10 +122,10 @@
       const queryStatsOnDrag = promiseUtils.debounce((layerView, event) => {
         console.log(layerView, event);
         const query = layerView.layer.createQuery();
-        query.geometry = view.toMap(event); // converts the screen point to a map point
-        query.distance = 1; // queries all features within 1 mile of the point
+        query.geometry = view.toMap(event);
+        query.distance = 1;
         query.units = "miles";
-        // highlight all features within the query distance
+
         layerView.queryObjectIds(query).then((ids) => {
           if (highlightHandle) {
             highlightHandle.remove();
@@ -199,7 +196,6 @@
             }
           }
         });
-
       }
     });
   </script>
