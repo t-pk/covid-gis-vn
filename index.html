@@ -1,12 +1,14 @@
-<html lang="en">
+<html lang="en"></html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
-    <link rel="icon" href="images/favicon.png" type="image/png" />
-    <title>Covid-19 in Viet Nam</title>
+    <title>covid-19 in Viet Nam</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/style.css" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
-    <link rel="stylesheet" href="css/style.css" />
     <script src="https://js.arcgis.com/4.30/"></script>
 
     <script>
@@ -22,11 +24,9 @@
       ], (MapView, WebMap, Legend, Expand, Bookmarks, lang, promiseUtils, reactiveUtils) => {
 
         let yearChart, ageChart, dispositionChart, genderChart, raceChart, totalNumber, avgAge, avgOpenTime;
-
         const webmap = new WebMap({ portalItem: { id: "1e254684c9bd41259e296eea06a0b1b0" } });
 
         const view = new MapView({ map: webmap, container: "viewDiv"});
-        // coding more on above.
 
         const titleContent = document.createElement("div");
         titleContent.style.padding = "15px";
@@ -50,8 +50,6 @@
           group: "top-right"
         });
         view.ui.add(titleExpand, "top-right");
-
-
 
         const legendExpand = new Expand({
           view: view,
@@ -85,8 +83,6 @@
           bookmarksExpand.expanded = false;
         });
 
-
-
         const sampleInstructions = document.createElement("div");
         sampleInstructions.style.padding = "10px";
         sampleInstructions.style.backgroundColor = "white";
@@ -105,12 +101,14 @@
         view.ui.add(instructionsExpand, "top-left");
 
         let highlightHandle = null;
-      })
+
+      });
     </script>
   </head>
+
   <body>
     <div id="viewDiv"></div>
-    <div id="panel">
+    <!-- <div id="panel">
       <div style="padding: 15px">
         <canvas id="year-chart" height="250" width="550"></canvas>
         <canvas id="age-chart" height="250" width="550"></canvas>
@@ -118,6 +116,6 @@
         <canvas id="gender-chart" width="200" height="350" style="float: left"></canvas>
         <canvas id="race-chart" width="200" height="350" style="float: left"></canvas>
       </div>
-    </div>
+    </div> -->
   </body>
 </html>
