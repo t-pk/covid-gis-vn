@@ -1,121 +1,217 @@
-<html lang="en"></html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
-    <title>covid-19 in Viet Nam</title>
+<html lang="en">
 
-    <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="css/style.css" />
+</html>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
-    <script src="https://js.arcgis.com/4.30/"></script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+  <title>Covid-19 in Viet Nam</title>
 
-    <script>
-      require([
-        "esri/views/MapView",
-        "esri/WebMap",
-        "esri/widgets/Legend",
-        "esri/widgets/Expand",
-        "esri/widgets/Bookmarks",
-        "esri/core/lang",
-        "esri/core/promiseUtils",
-        "esri/core/reactiveUtils"
-      ], (MapView, WebMap, Legend, Expand, Bookmarks, lang, promiseUtils, reactiveUtils) => {
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="css/style.css" />
 
-        let yearChart, ageChart, dispositionChart, genderChart, raceChart, totalNumber, avgAge, avgOpenTime;
-        const webmap = new WebMap({ portalItem: { id: "1e254684c9bd41259e296eea06a0b1b0" } });
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+  <script src="https://js.arcgis.com/4.30/"></script>
 
-        const view = new MapView({ map: webmap, container: "viewDiv"});
+  <script>
+    require([
+      "esri/views/MapView",
+      "esri/WebMap",
+      "esri/widgets/Legend",
+      "esri/widgets/Expand",
+      "esri/widgets/Bookmarks",
+      "esri/core/lang",
+      "esri/core/promiseUtils",
+      "esri/core/reactiveUtils"
+    ], (MapView, WebMap, Legend, Expand, Bookmarks, lang, promiseUtils, reactiveUtils) => {
 
-        const titleContent = document.createElement("div");
-        titleContent.style.padding = "15px";
-        titleContent.style.backgroundColor = "white";
-        titleContent.style.width = "350px";
-        titleContent.innerHTML = [
-          "<div id='title' class='esri-widget'>",
-          "<span id='num-homicides'>0</span> homicides occurred within one mile of the pointer location over the last 10 years.",
-          "The average age of the victims is <span id='avg-age'>0</span>. The average time an unsolved case has been",
-          "open is <span id='avg-open-time'>0</span> years.",
-          "</div>"
-        ].join(" ");
+      let yearChart, ageChart, dispositionChart, genderChart, raceChart, totalNumber, avgAge, avgOpenTime;
+      let infectedCasesChart;
 
-        const titleExpand = new Expand({
-          expandIcon: "dashboard",
-          expandTooltip: "Summary stats",
-          view: view,
-          content: titleContent,
-          expanded: view.widthBreakpoint !== "xsmall",
-          placement: "left-start",
-          group: "top-right"
+      const webmap = new WebMap({ portalItem: { id: "1e254684c9bd41259e296eea06a0b1b0" } });
+
+      const view = new MapView({ map: webmap, container: "viewDiv" });
+
+      const titleContent = document.createElement("div");
+      titleContent.style.padding = "15px";
+      titleContent.style.backgroundColor = "white";
+      titleContent.style.width = "350px";
+      titleContent.innerHTML = [
+        "<div id='title' class='esri-widget'>",
+        "<span id='num-homicides'>0</span> homicides occurred within one mile of the pointer location over the last 10 years.",
+        "The average age of the victims is <span id='avg-age'>0</span>. The average time an unsolved case has been",
+        "open is <span id='avg-open-time'>0</span> years.",
+        "</div>"
+      ].join(" ");
+
+      const titleExpand = new Expand({
+        expandIcon: "dashboard",
+        expandTooltip: "Summary stats",
+        view: view,
+        content: titleContent,
+        expanded: view.widthBreakpoint !== "xsmall",
+        placement: "left-start",
+        group: "top-right"
+      });
+      view.ui.add(titleExpand, "top-right");
+
+      const legendExpand = new Expand({ view: view, content: new Legend({ view: view }), expanded: view.widthBreakpoint !== "xsmall" });
+      view.ui.add(legendExpand, "bottom-left");
+
+      reactiveUtils.watch(() => view.widthBreakpoint, (widthBreakpoint) => {
+        titleExpand.expanded = widthBreakpoint !== "xsmall";
+        legendExpand.expanded = widthBreakpoint !== "xsmall";
+      }
+      );
+
+      const bookmarksWidget = new Bookmarks({ view: view });
+
+      const bookmarksExpand = new Expand({ view: view, content: bookmarksWidget, group: "top-right" });
+      view.ui.add(bookmarksExpand, "top-right");
+
+      bookmarksWidget.on("select-bookmark", (event) => { bookmarksExpand.expanded = false });
+
+      const sampleInstructions = document.createElement("div");
+      sampleInstructions.style.padding = "10px";
+      sampleInstructions.style.backgroundColor = "white";
+      sampleInstructions.style.width = "300px";
+      sampleInstructions.innerHTML = [
+        "<b>Drag</b> the pointer over the data to view stats",
+        "within one mile of the pointer location."
+      ].join(" ");
+
+      const instructionsExpand = new Expand({ expandIcon: "question", expandTooltip: "How to use this sample", view: view, content: sampleInstructions });
+      view.ui.add(instructionsExpand, "top-left");
+
+      let highlightHandle = null;
+
+
+      view.when().then(() => {
+        // Create the charts when the view is ready
+        createCharts();
+
+        const layer = webmap.layers.getItemAt(1);
+        layer.outFields = [
+          "province",
+          "total_infected_cases",
+          "today_infected_cases",
+          "deaths",
+          "total_recovered_cases",
+          // "date"
+        ];
+
+        view.whenLayerView(layer).then((layerView) => {
+          reactiveUtils
+            .whenOnce(() => !layerView.updating)
+            .then(() => {
+              // Query layer view statistics as the user clicks
+              // or drags the pointer across the view.
+              view.on(["click", "drag"], (event) => {
+                // disables navigation by pointer drag
+                event.stopPropagation();
+                queryStatsOnDrag(layerView, event)
+                  .then(updateCharts)
+                  .catch((error) => {
+                    if (error.name !== "AbortError") {
+                      console.error(error);
+                    }
+                  });
+              });
+            });
         });
-        view.ui.add(titleExpand, "top-right");
+      });
 
-        const legendExpand = new Expand({
-          view: view,
-          content: new Legend({
-            view: view
-          }),
-          expanded: view.widthBreakpoint !== "xsmall",
+      const queryStatsOnDrag = promiseUtils.debounce((layerView, event) => {
+        console.log(layerView, event);
+        const query = layerView.layer.createQuery();
+        query.geometry = view.toMap(event); // converts the screen point to a map point
+        query.distance = 1; // queries all features within 1 mile of the point
+        query.units = "miles";
+        // highlight all features within the query distance
+        layerView.queryObjectIds(query).then((ids) => {
+          if (highlightHandle) {
+            highlightHandle.remove();
+            highlightHandle = null;
+          }
+          highlightHandle = layerView.highlight(ids);
         });
-        view.ui.add(legendExpand, "bottom-left");
 
-        reactiveUtils.watch(
-          () => view.widthBreakpoint,
-          (widthBreakpoint) => {
-            titleExpand.expanded = widthBreakpoint !== "xsmall";
-            legendExpand.expanded = widthBreakpoint !== "xsmall";
+        const statsQuery = query.clone();
+
+        return layerView.queryFeatures(statsQuery).then(
+          function (response) {
+            const stats = response.features[0].attributes;
+            console.log("layerView.queryFeatures", stats);
+            return stats;
+          },
+          function (e) {
+            console.error(e);
           }
         );
+      })
 
-        const bookmarksWidget = new Bookmarks({
-          view: view
+      function updateCharts(responses) {
+        console.log("updateCharts", Object.values(responses));
+        infectedCasesChart.data.datasets[0].data = Object.values(responses);
+        infectedCasesChart.update();
+
+      }
+      function createCharts() {
+        const infectedCasesCanvas = document.getElementById("infected-cases-chart");
+
+        infectedCasesChart = new Chart(infectedCasesCanvas.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: ["2019", "2020", "2021"],
+            datasets: [
+              {
+                label: "Solved by 2017",
+                backgroundColor: "#149dcf",
+                stack: "Stack 0",
+                data: [0, 0, 0, 0,]
+              },
+            ]
+          },
+          options: {
+            responsive: false,
+            legend: {
+              position: "top"
+            },
+            title: {
+              display: true,
+              text: "Homicides by year"
+            },
+            scales: {
+              xAxes: [
+                {
+                  stacked: true
+                }
+              ],
+              yAxes: [
+                {
+                  stacked: true,
+                  ticks: {
+                    beginAtZero: true
+                  }
+                }
+              ]
+            }
+          }
         });
 
-        const bookmarksExpand = new Expand({
-          view: view,
-          content: bookmarksWidget,
-          group: "top-right"
-        });
-        view.ui.add(bookmarksExpand, "top-right");
+      }
+    });
+  </script>
+</head>
 
-        bookmarksWidget.on("select-bookmark", (event) => {
-          bookmarksExpand.expanded = false;
-        });
+<body>
+  <div id="viewDiv"></div>
+  <div id="panel">
+    <div style="padding: 15px">
+      <canvas id="infected-cases-chart" height="250" width="550"></canvas>
+    </div>
+  </div>
+</body>
 
-        const sampleInstructions = document.createElement("div");
-        sampleInstructions.style.padding = "10px";
-        sampleInstructions.style.backgroundColor = "white";
-        sampleInstructions.style.width = "300px";
-        sampleInstructions.innerHTML = [
-          "<b>Drag</b> the pointer over the data to view stats",
-          "within one mile of the pointer location."
-        ].join(" ");
-
-        const instructionsExpand = new Expand({
-          expandIcon: "question",
-          expandTooltip: "How to use this sample",
-          view: view,
-          content: sampleInstructions
-        });
-        view.ui.add(instructionsExpand, "top-left");
-
-        let highlightHandle = null;
-
-      });
-    </script>
-  </head>
-
-  <body>
-    <div id="viewDiv"></div>
-    <!-- <div id="panel">
-      <div style="padding: 15px">
-        <canvas id="year-chart" height="250" width="550"></canvas>
-        <canvas id="age-chart" height="250" width="550"></canvas>
-        <canvas id="disposition-chart" width="200" height="350" style="float: left"></canvas>
-        <canvas id="gender-chart" width="200" height="350" style="float: left"></canvas>
-        <canvas id="race-chart" width="200" height="350" style="float: left"></canvas>
-      </div>
-    </div> -->
-  </body>
 </html>
