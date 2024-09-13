@@ -1,4 +1,4 @@
-import { createCharts, updateCharts } from './js/charts.js';
+import { createCharts, updateCharts } from './charts.js';
 
 require([
   "esri/views/MapView",
