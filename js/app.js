@@ -63,9 +63,6 @@ require([
     "within one mile of the pointer location."
   ].join(" ");
 
-  // const instructionsExpand = new Expand({ expandIcon: "question", expandTooltip: "How to use this sample", view: view, content: sampleInstructions });
-  // view.ui.add(instructionsExpand, "top-left");
-
   view.when().then(() => {
     createCharts();
 
@@ -88,67 +85,67 @@ require([
 
     view.whenLayerView(layer_map).then((layerView1) => {
       view.whenLayerView(layer_csv).then((layerView0) => {
- // Lấy dữ liệu từ CSV và lưu trữ trong một object để dễ dàng truy cập
- const csvData = {};
+        // Lấy dữ liệu từ CSV và lưu trữ trong một object để dễ dàng truy cập
+        const csvData = {};
 
- const queryCSV = layer_csv.createQuery();
- queryCSV.returnGeometry = false; // Không cần trả về hình học từ CSV
- queryCSV.outFields = ["province", "total_infected_cases"];
+        const queryCSV = layer_csv.createQuery();
+        queryCSV.returnGeometry = false; // Không cần trả về hình học từ CSV
+        queryCSV.outFields = ["province", "total_infected_cases"];
 
- layerView0.queryFeatures(queryCSV).then((responseCSV) => {
-   responseCSV.features.forEach((feature) => {
-     const province = feature.attributes.province;
-     const totalCases = feature.attributes.total_infected_cases;
-     csvData[province] = totalCases;
-   });
+        layerView0.queryFeatures(queryCSV).then((responseCSV) => {
+          responseCSV.features.forEach((feature) => {
+            const province = feature.attributes.province;
+            const totalCases = feature.attributes.total_infected_cases;
+            csvData[province] = totalCases;
+          });
 
-   // Thiết lập renderer cho layer_map dựa trên dữ liệu CSV
-   const renderer = {
-     type: "unique-value", // Sử dụng kiểu unique-value renderer để áp dụng màu sắc theo số ca nhiễm
-     field: "name", // Tên tỉnh từ layer_map
-     uniqueValueInfos: Object.keys(csvData).map((province) => {
-       const totalCases = csvData[province];
-       let color = "#ffffff"; // Mặc định màu trắng nếu không có dữ liệu
+          // Thiết lập renderer cho layer_map dựa trên dữ liệu CSV
+          const renderer = {
+            type: "unique-value", // Sử dụng kiểu unique-value renderer để áp dụng màu sắc theo số ca nhiễm
+            field: "name", // Tên tỉnh từ layer_map
+            uniqueValueInfos: Object.keys(csvData).map((province) => {
+              const totalCases = csvData[province];
+              let color = "#ffffff"; // Mặc định màu trắng nếu không có dữ liệu
 
-       // Áp dụng màu sắc dựa trên tổng số ca nhiễm từ CSV
-       if (totalCases <= 100) {
-         color = "#ffedea";
-       } else if (totalCases <= 500) {
-         color = "#ffcec5";
-       } else if (totalCases <= 1000) {
-         color = "#ffad9f";
-       } else if (totalCases <= 5000) {
-         color = "#ff6f56";
-       } else {
-         color = "#e74c3c";
-       }
+              // Áp dụng màu sắc dựa trên tổng số ca nhiễm từ CSV
+              if (totalCases <= 100) {
+                color = "#ffedea";
+              } else if (totalCases <= 500) {
+                color = "#ffcec5";
+              } else if (totalCases <= 1000) {
+                color = "#ffad9f";
+              } else if (totalCases <= 5000) {
+                color = "#ff6f56";
+              } else {
+                color = "#e74c3c";
+              }
 
-       return {
-         value: province,
-         symbol: {
-           type: "simple-fill",
-           color: color,
-           outline: {
-             width: 1,
-             color: "black"
-           }
-         },
-         label: `${province}: ${totalCases} cases`
-       };
-     }),
-     defaultSymbol: {
-       type: "simple-fill",
-       color: "#ffffff", // Màu mặc định cho những tỉnh không có dữ liệu
-       outline: {
-         width: 1,
-         color: "black"
-       }
-     }
-   };
+              return {
+                value: province,
+                symbol: {
+                  type: "simple-fill",
+                  color: color,
+                  outline: {
+                    width: 1,
+                    color: "black"
+                  }
+                },
+                label: `${province}: ${totalCases} cases`
+              };
+            }),
+            defaultSymbol: {
+              type: "simple-fill",
+              color: "#ffffff", // Màu mặc định cho những tỉnh không có dữ liệu
+              outline: {
+                width: 1,
+                color: "black"
+              }
+            }
+          };
 
-   // Áp dụng renderer cho layer_map
-   layer_map.renderer = renderer;
- });
+          // Áp dụng renderer cho layer_map
+          layer_map.renderer = renderer;
+        });
         view.on(["click"], (event) => {
           event.stopPropagation();
 
