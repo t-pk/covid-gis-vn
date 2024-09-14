@@ -63,16 +63,16 @@ require([
     "within one mile of the pointer location."
   ].join(" ");
 
-  view.when().then(() => {
+  async function initializeMap() {
+    // Wait for the view to load
+    await view.when();
+
+    // Call createCharts after view is ready
     createCharts();
 
     const layer_csv = webmap.layers.getItemAt(1);
     const layer_map = webmap.layers.getItemAt(0);
-    layer_map.outFields = [
-      "name",
-      "id"
-    ];
-
+    layer_map.outFields = ["name", "id"];
     layer_csv.outFields = [
       "province",
       "total_infected_cases",
@@ -81,122 +81,131 @@ require([
       "total_recovered_cases",
       "date"
     ];
+
     let currentHighlight = null;
 
-    view.whenLayerView(layer_map).then((layerView1) => {
-      view.whenLayerView(layer_csv).then((layerView0) => {
-        // Lấy dữ liệu từ CSV và lưu trữ trong một object để dễ dàng truy cập
-        const csvData = {};
+    // Wait for layer views to load
+    const layerView1 = await view.whenLayerView(layer_map);
+    const layerView0 = await view.whenLayerView(layer_csv);
 
-        const queryCSV = layer_csv.createQuery();
-        queryCSV.returnGeometry = false; // Không cần trả về hình học từ CSV
-        queryCSV.outFields = ["province", "total_infected_cases"];
+    // Fetch and process CSV data
+    const csvData = {};
+    const queryCSV = layer_csv.createQuery();
+    queryCSV.returnGeometry = false; // No need for geometry
+    queryCSV.outFields = ["province", "total_infected_cases"];
 
-        layerView0.queryFeatures(queryCSV).then((responseCSV) => {
-          responseCSV.features.forEach((feature) => {
-            const province = feature.attributes.province;
-            const totalCases = feature.attributes.total_infected_cases;
-            csvData[province] = totalCases;
-          });
-
-          // Thiết lập renderer cho layer_map dựa trên dữ liệu CSV
-          const renderer = {
-            type: "unique-value", // Sử dụng kiểu unique-value renderer để áp dụng màu sắc theo số ca nhiễm
-            field: "name", // Tên tỉnh từ layer_map
-            uniqueValueInfos: Object.keys(csvData).map((province) => {
-              const totalCases = csvData[province];
-              let color = "#ffffff"; // Mặc định màu trắng nếu không có dữ liệu
-
-              // Áp dụng màu sắc dựa trên tổng số ca nhiễm từ CSV
-              if (totalCases <= 100) {
-                color = "#ffedea";
-              } else if (totalCases <= 500) {
-                color = "#ffcec5";
-              } else if (totalCases <= 1000) {
-                color = "#ffad9f";
-              } else if (totalCases <= 5000) {
-                color = "#ff6f56";
-              } else {
-                color = "#e74c3c";
-              }
-
-              return {
-                value: province,
-                symbol: {
-                  type: "simple-fill",
-                  color: color,
-                  outline: {
-                    width: 1,
-                    color: "black"
-                  }
-                },
-                label: `${province}: ${totalCases} cases`
-              };
-            }),
-            defaultSymbol: {
-              type: "simple-fill",
-              color: "#ffffff", // Màu mặc định cho những tỉnh không có dữ liệu
-              outline: {
-                width: 1,
-                color: "black"
-              }
-            }
-          };
-
-          // Áp dụng renderer cho layer_map
-          layer_map.renderer = renderer;
-        });
-        view.on(["click"], (event) => {
-          event.stopPropagation();
-
-
-          const query1 = layer_map.createQuery();
-          query1.geometry = view.toMap(event);
-
-          layerView1.queryFeatures(query1).then((response1) => {
-            if (currentHighlight) {
-              currentHighlight.remove();
-            }
-
-            currentHighlight = layerView1.highlight(response1.features[0]);
-
-            layerView1.highlightOptions = {
-              color: "#ffe700",
-              haloOpacity: 0.9,
-              fillOpacity: 0.2
-            };
-            if (response1.features.length > 0) {
-              const provinceFromLayer1 = response1.features[0].attributes.name;
-              console.log("provinceFromLayer1", provinceFromLayer1);
-
-              const query0 = layer_csv.createQuery();
-              query0.where = `province = '${provinceFromLayer1}'`;
-              query0.returnGeometry = true;
-
-              layerView0.queryFeatures(query0).then((response0) => {
-                if (response0.features.length > 0) {
-                  const provinceFromLayer0 = response0.features[0];
-                  console.log("provinceFromLayer0", provinceFromLayer0);
-                  view.openPopup({
-                    title: "Thông tin chi tiết",
-                    content: `
-                      <b>Province:</b> ${provinceFromLayer0.attributes.province}<br>
-                      <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
-                      <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
-                      <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
-                      <b>Total Recovered Cases:</b> ${provinceFromLayer0.attributes.total_recovered_cases}
-                      <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
-                    `,
-                    location: event.mapPoint
-                  });
-                }
-              });
-            }
-          });
-        });
-      });
+    const responseCSV = await layerView0.queryFeatures(queryCSV);
+    responseCSV.features.forEach((feature) => {
+      const province = feature.attributes.province;
+      const totalCases = feature.attributes.total_infected_cases;
+      csvData[province] = totalCases;
     });
-  });
+    
+    // Set up renderer for the map layer based on CSV data
+    const renderer = {
+      type: "unique-value", // Using unique-value renderer to apply colors based on case count
+      field: "name", // Matching province name in the map layer
+      uniqueValueInfos: Object.keys(csvData).map((province) => {
+        const totalCases = csvData[province];
+        let color = "#ffffff"; // Default color if no data
+        if (totalCases == null || totalCases === "") {
+          // Gán một màu mặc định hoặc bỏ qua tỉnh này
+          color = "#ffffff";
+        }
+        // Apply color based on the number of cases
+        if (totalCases <= 100) {
+          color = "#ffedea";
+        } else if (totalCases <= 500) {
+          color = "#ffcec5";
+        } else if (totalCases <= 1000) {
+          color = "#ffad9f";
+        } else if (totalCases <= 5000) {
+          color = "#ff6f56";
+        } else {
+          color = "#e74c3c";
+        }
+
+        return {
+          value: province,
+          symbol: {
+            type: "simple-fill",
+            color: color,
+            outline: {
+              width: 1,
+              color: "black"
+            }
+          },
+          label: `${province}: ${totalCases} cases`
+        };
+      }),
+      defaultSymbol: {
+        type: "simple-fill",
+        color: "#ffffff", // Default color for provinces with no data
+        outline: {
+          width: 1,
+          color: "black"
+        }
+      }
+    };
+
+    // Apply the renderer to the map layer
+    layer_map.renderer = renderer;
+
+    view.whenLayerView(layer_map).then(() => {
+      layer_map.renderer = renderer; // Thiết lập lại renderer nếu cần
+    });
+
+    // Handle map click event to show popup with detailed information
+    view.on("click", async (event) => {
+      event.stopPropagation();
+
+      const query1 = layer_map.createQuery();
+      query1.geometry = view.toMap(event);
+
+      const response1 = await layerView1.queryFeatures(query1);
+      if (currentHighlight) {
+        currentHighlight.remove();
+      }
+
+      // Highlight the selected province
+      currentHighlight = layerView1.highlight(response1.features[0]);
+
+      layerView1.highlightOptions = {
+        color: "#ffe700",
+        haloOpacity: 0.9,
+        fillOpacity: 0.2
+      };
+
+      if (response1.features.length > 0) {
+        const provinceFromLayer1 = response1.features[0].attributes.name;
+
+        const query0 = layer_csv.createQuery();
+        query0.where = `province = '${provinceFromLayer1}'`;
+        query0.returnGeometry = true;
+
+        const response0 = await layerView0.queryFeatures(query0);
+        if (response0.features.length > 0) {
+          const provinceFromLayer0 = response0.features[0];
+          view.openPopup({
+            title: "Thông tin chi tiết",
+            content: `
+              <b>Province:</b> ${provinceFromLayer0.attributes.province}<br>
+              <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
+              <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
+              <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
+              <b>Total Recovered Cases:</b> ${provinceFromLayer0.attributes.total_recovered_cases}<br>
+              <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
+            `,
+            location: event.mapPoint
+          });
+        }
+      }
+    });
+  }
+
+  // Call the async function to initialize the map
+  initializeMap();
+
 
   const queryStatsOnDrag = promiseUtils.debounce((layerView, event) => {
     console.log(layerView, event);
