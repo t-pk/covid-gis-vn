@@ -67,34 +67,77 @@ require([
   view.ui.add(instructionsExpand, "top-left");
 
   view.when().then(() => {
-    // Create the charts when the view is ready
     createCharts();
 
-    const layer = webmap.layers.getItemAt(1);
-    layer.outFields = [
+    const layer_csv = webmap.layers.getItemAt(1);
+    const layer_map = webmap.layers.getItemAt(0);
+    layer_map.outFields = [
+      "name",
+      "id"
+    ];
+
+    layer_csv.outFields = [
       "province",
       "total_infected_cases",
       "today_infected_cases",
       "deaths",
       "total_recovered_cases",
-      // "date"
+      "date"
     ];
+    let currentHighlight = null;
 
-    view.whenLayerView(layer).then((layerView) => {
-      reactiveUtils
-        .whenOnce(() => !layerView.updating)
-        .then(() => {
-          view.on(["click", "drag"], (event) => {
-            event.stopPropagation();
-            queryStatsOnDrag(layerView, event)
-              .then(updateCharts)
-              .catch((error) => {
-                if (error.name !== "AbortError") {
-                  console.error(error);
+    view.whenLayerView(layer_map).then((layerView1) => {
+      view.whenLayerView(layer_csv).then((layerView0) => {
+
+        view.on(["click"], (event) => {
+          event.stopPropagation();
+
+
+          const query1 = layer_map.createQuery();
+          query1.geometry = view.toMap(event);
+
+          layerView1.queryFeatures(query1).then((response1) => {
+            if (currentHighlight) {
+              currentHighlight.remove();
+            }
+
+            currentHighlight = layerView1.highlight(response1.features[0]);
+
+            layerView1.highlightOptions = {
+              color: "#ffe700",
+              haloOpacity: 0.9,
+              fillOpacity: 0.2
+            };
+            if (response1.features.length > 0) {
+              const provinceFromLayer1 = response1.features[0].attributes.name;
+              console.log("provinceFromLayer1", provinceFromLayer1);
+
+              const query0 = layer_csv.createQuery();
+              query0.where = `province = '${provinceFromLayer1}'`;
+              query0.returnGeometry = true;
+
+              layerView0.queryFeatures(query0).then((response0) => {
+                if (response0.features.length > 0) {
+                  const provinceFromLayer0 = response0.features[0];
+                  console.log("provinceFromLayer0", provinceFromLayer0);
+                  view.popup.open({
+                    title: "Thông tin chi tiết",
+                    content: `
+                      <b>Province:</b> ${provinceFromLayer0.attributes.province}<br>
+                      <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
+                      <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
+                      <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
+                      <b>Total Recovered Cases:</b> ${provinceFromLayer0.attributes.total_recovered_cases}
+                      <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
+                    `,
+                    location: event.mapPoint
+                  });
                 }
               });
+            }
           });
         });
+      });
     });
   });
 
