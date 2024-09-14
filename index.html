@@ -17,6 +17,12 @@
   <div id="viewDiv"></div>
   <div id="panel">
     <div style="padding: 15px">
+      <div id="attribute-buttons">
+        <button onclick="queryData('total_infected_cases')">Total Infected Cases</button>
+        <button onclick="queryData('today_infected_cases')">Today Infected Cases</button>
+        <button onclick="queryData('deaths')">Deaths</button>
+        <button onclick="queryData('total_recovered_cases')">Total Recovered Cases</button>
+      </div>
       <canvas id="infected-cases-chart" height="250" width="550"></canvas>
     </div>
   </div>
