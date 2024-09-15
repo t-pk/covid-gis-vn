@@ -18,27 +18,11 @@ export function createCharts() {
     },
     options: {
       responsive: false,
-      legend: {
-        position: "top"
-      },
-      title: {
-        display: true,
-        text: "Homicides by year"
-      },
+      legend: { position: "top" },
+      title: { display: true, text: "Homicides by year" },
       scales: {
-        xAxes: [
-          {
-            stacked: true
-          }
-        ],
-        yAxes: [
-          {
-            stacked: true,
-            ticks: {
-              beginAtZero: true
-            }
-          }
-        ]
+        xAxes: [{ stacked: true }],
+        yAxes: [{ stacked: true, ticks: { beginAtZero: true } }]
       }
     }
   });

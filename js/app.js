@@ -96,7 +96,6 @@ require([
 
     layerDataViewUtils.updateLayerDataView(layerDataView, view, layer_map, csvData);
 
-    // Handle map click event to show popup with detailed information
     view.on("click", async (event) => {
       event.stopPropagation();
 
@@ -145,7 +144,6 @@ require([
   }
 
   initializeMap();
-
 
   const queryStatsOnDrag = promiseUtils.debounce((layerView, event) => {
     console.log(layerView, event);
