@@ -30,7 +30,7 @@ define([
 
           return;
         }
-        view.popup.close();
+        view.closePopup();
         graphics.forEach((graphic) => {
           const province = graphic.attributes.province;
           const totalCases = graphic.attributes[attribute];

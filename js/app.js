@@ -17,6 +17,8 @@ require([
 
   const view = new MapView({ map: webmap, container: "viewDiv" });
 
+  view.constraints = { minZoom: 6, maxZoom: 7 };
+
   const titleContent = document.createElement("div");
   titleContent.style.padding = "15px";
   titleContent.style.backgroundColor = "white";
