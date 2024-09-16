@@ -40,12 +40,8 @@ require([
   });
   view.ui.add(titleExpand, "top-right");
 
-  const legendExpand = new Expand({ view: view, content: new Legend({ view: view }), expanded: view.widthBreakpoint !== "xsmall" });
-  view.ui.add(legendExpand, "bottom-left");
-
   reactiveUtils.watch(() => view.widthBreakpoint, (widthBreakpoint) => {
     titleExpand.expanded = widthBreakpoint !== "xsmall";
-    legendExpand.expanded = widthBreakpoint !== "xsmall";
   });
 
   const bookmarksWidget = new Bookmarks({ view: view });
@@ -62,7 +58,7 @@ require([
     "<b>Drag</b> the pointer over the data to view stats",
     "within one mile of the pointer location."
   ].join(" ");
-  
+
   async function initializeMap() {
     await view.when();
 
@@ -88,11 +84,6 @@ require([
     const layerDataView = await view.whenLayerView(layer_csv);
 
     const csvData = {};
-    const queryCSV = layer_csv.createQuery();
-
-    queryCSV.returnGeometry = false;
-    queryCSV.outFields = ["province", "total_infected_cases"];
-    queryCSV.orderByFields = ["total_infected_cases"];
 
     layerDataViewUtils.updateLayerDataView(layerDataView, view, layer_map, csvData);
 
@@ -107,7 +98,6 @@ require([
         currentHighlight.remove();
       }
 
-      // Highlight the selected province
       currentHighlight = layerMapView.highlight(responseMap.features[0]);
 
       layerMapView.highlightOptions = {
@@ -117,13 +107,36 @@ require([
       };
 
       if (responseMap.features.length > 0) {
+        const dateInput = document.getElementById('date-input');
+        const queryCSV = layer_csv.createQuery();
         const provinceFromLayerData = responseMap.features[0].attributes.name;
-        console.log("provinceFromLayerData", provinceFromLayerData)
-        const dataQuery = layer_csv.createQuery();
-        dataQuery.where = `province = '${provinceFromLayerData}'`;
-        dataQuery.returnGeometry = true;
 
-        const responseData = await layerDataView.queryFeatures(dataQuery);
+        queryCSV.where = `date = DATE '${dateInput.value}' AND province = '${provinceFromLayerData}'`
+        queryCSV.returnGeometry = true;
+
+        console.log("queryCSV", queryCSV);
+        dateInput.addEventListener('change', async (event) => {
+          const selectedDate = event.target.value;
+
+          queryCSV.where = `date = DATE '${selectedDate}' AND province = '${provinceFromLayerData}'`
+          let responseData = await layerDataView.queryFeatures(queryCSV);
+          if (responseData.features.length > 0) {
+            const provinceFromLayer0 = responseData.features[0];
+            view.openPopup({
+              title: "Thông tin chi tiết",
+              content: `
+              <b>Province:</b> ${provinceFromLayer0.attributes.province}<br>
+              <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
+              <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
+              <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
+              <b>Total Recovered Cases:</b> ${provinceFromLayer0.attributes.total_recovered_cases}<br>
+              <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
+            `,
+              location: event.mapPoint
+            });
+          }
+        });
+        let responseData = await layerDataView.queryFeatures(queryCSV);
         if (responseData.features.length > 0) {
           const provinceFromLayer0 = responseData.features[0];
           view.openPopup({

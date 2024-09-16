@@ -16,6 +16,7 @@ export function createCharts() {
         }
       ]
     },
+
     options: {
       responsive: false,
       legend: { position: "top" },

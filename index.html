@@ -17,15 +17,25 @@
   <div id="viewDiv"></div>
   <div id="panel">
     <div style="padding: 15px">
-      <div id="attribute-buttons">
-        <button onclick="queryData('total_infected_cases')">Total Infected Cases</button>
-        <button onclick="queryData('today_infected_cases')">Today Infected Cases</button>
-        <button onclick="queryData('deaths')">Deaths</button>
-        <button onclick="queryData('total_recovered_cases')">Total Recovered Cases</button>
+      <div id="attribute-selection">
+        <label for="attribute-select">Select Attribute:</label>
+        <select id="attribute-select">
+          <option value="total_infected_cases">Total Infected Cases</option>
+          <option value="today_infected_cases">Today Infected Cases</option>
+          <option value="deaths">Deaths</option>
+          <option value="total_recovered_cases">Total Recovered Cases</option>
+        </select>
       </div>
+  
+      <div id="date-selection" style="margin-top: 10px;">
+        <label for="date-input">Select Date:</label>
+        <input type="date" id="date-input" value="2021-08-06"/>
+      </div>
+  
       <canvas id="infected-cases-chart" height="250" width="550"></canvas>
     </div>
   </div>
+  
 </body>
 
 </html>
