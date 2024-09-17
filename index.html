@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
-  <title>Covid-19 in Viet Nam</title>
+  <title>Quản Lý Dịch Bệnh</title>
   <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/style.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+  <script  src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <script src="https://js.arcgis.com/4.30/"></script>
   <script src="./js/app.js" type="module"></script>
 </head>
@@ -31,8 +31,10 @@
         <label for="date-input">Select Date:</label>
         <input type="date" id="date-input" value="2021-08-06"/>
       </div>
-  
-      <canvas id="infected-cases-chart" height="250" width="550"></canvas>
+      
+      <canvas id="pieChart" height="250" width="550"></canvas>  
+      <canvas id="lineChart" height="250" width="550"></canvas>  
+      <canvas id="barChart" height="250" width="550"></canvas>
     </div>
   </div>
   

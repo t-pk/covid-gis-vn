@@ -1,5 +1,3 @@
-import { createCharts, updateCharts } from './charts.js';
-
 require([
   "esri/views/MapView",
   "esri/WebMap",
@@ -63,9 +61,6 @@ require([
 
   async function initializeMap() {
     await view.when();
-
-    // Call createCharts after view is ready
-    createCharts();
 
     const layer_csv = webmap.layers.getItemAt(1);
     const layer_map = webmap.layers.getItemAt(0);

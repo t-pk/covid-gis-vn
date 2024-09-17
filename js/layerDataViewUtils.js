@@ -1,85 +1,57 @@
 define([
   "esri/core/reactiveUtils",
-  "esri/widgets/Expand",
-  "esri/widgets/Legend"
-], function (reactiveUtils) {
+  "./js/layerQuery.js",
+    "./js/charts.js"
+], function (reactiveUtils, layerQuery, Chart) {
 
   function updateLayerDataView(layerDataView, view, layer_map, csvData) {
-    const queryAndUpdateLayer = async () => {
-      const dateInput = document.getElementById('date-input');
-      const attribute = document.getElementById('attribute-select').value;
-      console.log("attribute", attribute);
-      try {
-        const results = await layerDataView.queryFeatures({
-          geometry: view.extent,
-          returnGeometry: true,
-          where: `date = DATE '${dateInput.value}'`
-        });
-
-        const graphics = results.features;
-        if (graphics.length === 0) {
-          view.popup.open({
-            title: "No Data",
-            content: `No data found for the selected date: ${dateInput.value}`,
-            location: view.center
-          });
-          layer_map.renderer = {
-            type: "simple",
-            symbol: { type: "simple-fill", color: "#ffffff", outline: { width: 1, color: "black" } }
-          };
-
-          return;
-        }
-        view.closePopup();
-        graphics.forEach((graphic) => {
-          const province = graphic.attributes.province;
-          const totalCases = graphic.attributes[attribute];
-          csvData[province] = totalCases;
-        });
-
-        const renderer = {
-          type: "unique-value",
-          field: "name",
-          uniqueValueInfos: Object.keys(csvData).map((province) => {
-            const totalCases = csvData[province] || 0;
-            let color = "#ffffff";
-
-            if (totalCases > 1 && totalCases <= 100) {
-              color = "#ffedea";
-            } else if (totalCases <= 500) {
-              color = "#ffcec5";
-            } else if (totalCases <= 1000) {
-              color = "#ffad9f";
-            } else if (totalCases <= 5000) {
-              color = "#ff6f56";
-            } else if (totalCases > 5000) {
-              color = "#ef0000";
-            }
-            return {
-              value: province,
-              symbol: {
-                type: "simple-fill",
-                color: color, outline: { width: 1, color: "black" }
-              },
-            };
-          }),
-          defaultSymbol: {
-            type: "simple-fill",
-            color: "#ffffff", outline: { width: 1, color: "black" }
-          }
-        };
-
-        layer_map.renderer = renderer;
-
-      } catch (error) {
-        console.error("Query failed: ", error);
-      }
+    const colorSchemes = {
+      "total_infected_cases": ["#ffedea", "#ffcec5", "#ffad9f", "#ff6f56", "#ef0000"],
+      "today_infected_cases": ["#f3e5f5", "#e1bee7", "#ce93d8", "#ab47bc", "#6a1b9a"],
+      "deaths": ["#e0e0e0", "#bdbdbd", "#9e9e9e", "#616161", "#000000"],
+      "total_recovered_cases": ["#e8f5e9", "#c8e6c9", "#a5d6a7", "#66bb6a", "#2e7d32"]
     };
+
+    async function queryAndUpdateLayer() {
+      const attribute = document.getElementById('attribute-select').value;
+      const { renderer, legendInfo } = await layerQuery.queryAndUpdateLayer(layerDataView, view, layer_map, csvData, attribute, colorSchemes);
+      console.log("renderer", renderer);
+      
+      // if (renderer && legendInfo) {
+      //   // Tạo Legend cho attribute hiện tại
+      //   const legendDiv = document.createElement("div");
+      //   legendDiv.innerHTML = `<h3>Legend for ${attribute}</h3>`;
+      //   legendInfo.forEach(info => {
+      //     const legendItem = document.createElement("div");
+      //     legendItem.innerHTML = `<span style="background-color: ${info.color}; width: 20px; height: 20px; display: inline-block; margin-right: 10px;"></span>${info.label}`;
+      //     legendDiv.appendChild(legendItem);
+      //   });
+
+      //   // Tạo Expand widget cho Legend
+      //   if (expandWidget) view.ui.remove(expandWidget);
+      //   expandWidget = new Expand({
+      //     content: legendDiv,
+      //     view: view,
+      //     expanded: false,
+      //     expandIconClass: "esri-icon-legend",
+      //     expandTooltip: `Legend for ${attribute}`
+      //   });
+      //   view.ui.add(expandWidget, "bottom-left");
+
+      //   // Cập nhật renderer cho layer
+      //   layer_map.renderer = renderer;
+      // }
+      layer_map.renderer = renderer;
+    }
 
     reactiveUtils.when(
       () => !layerDataView.dataUpdating,
       queryAndUpdateLayer
     );
+
+    window.onload = async function () {
+      await queryAndUpdateLayer();
+    };
 
     const dateInput = document.getElementById('date-input');
     dateInput.addEventListener('change', queryAndUpdateLayer);
