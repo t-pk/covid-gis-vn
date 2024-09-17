@@ -1,26 +1,35 @@
 define([], function () {
-  // Global variables to store chart instances
   let barChartInstance = null;
   let lineChartInstance = null;
   let pieChartInstance = null;
 
-  // Hàm tạo biểu đồ sau khi nhận dữ liệu
   function createCharts(data) {
-    console.log("data", data);
-    
-    // Check and destroy previous bar chart instance
+
+    function sortData(labels, values) {
+      const combined = labels.map((label, index) => ({
+        label: label,
+        value: values[index]
+      }));
+      combined.sort((a, b) => b.value - a.value);
+      return {
+        labels: combined.map(item => item.label),
+        values: combined.map(item => item.value)
+      };
+    }
+
+    let sortedTodayInfectedCases = sortData(data.labels, data.today_infected_cases);
     if (barChartInstance) {
       barChartInstance.destroy();
     }
-    // Biểu đồ cột cho số ca nhiễm hôm nay
+
     const barCtx = document.getElementById('barChart').getContext('2d');
     barChartInstance = new Chart(barCtx, {
       type: 'bar',
       data: {
-        labels: data.labels,
+        labels: sortedTodayInfectedCases.labels,
         datasets: [{
           label: 'Today Infected Cases',
-          data: data.today_infected_cases,
+          data: sortedTodayInfectedCases.values,
           backgroundColor: 'rgba(255, 99, 132, 0.2)',
           borderColor: 'rgba(255, 99, 132, 1)',
           borderWidth: 1
@@ -35,19 +44,20 @@ define([], function () {
       }
     });
 
-    // Check and destroy previous line chart instance
     if (lineChartInstance) {
       lineChartInstance.destroy();
     }
-    // Biểu đồ đường cho số ca tử vong theo các tỉnh
+
+    let sortedDeaths = sortData(data.labels, data.deaths);
+
     const lineCtx = document.getElementById('lineChart').getContext('2d');
     lineChartInstance = new Chart(lineCtx, {
       type: 'line',
       data: {
-        labels: data.labels,
+        labels: sortedDeaths.labels,
         datasets: [{
           label: 'Deaths',
-          data: data.deaths,
+          data: sortedDeaths.values,
           backgroundColor: 'rgba(54, 162, 235, 0.2)',
           borderColor: 'rgba(54, 162, 235, 1)',
           borderWidth: 1,
@@ -63,33 +73,75 @@ define([], function () {
       }
     });
 
-    // Check and destroy previous pie chart instance
     if (pieChartInstance) {
       pieChartInstance.destroy();
     }
-    // Biểu đồ tròn cho tỷ lệ hồi phục
+    let sortedRecoveredCases = sortData(data.labels, data.total_recovered_cases);
+
     const pieCtx = document.getElementById('pieChart').getContext('2d');
     pieChartInstance = new Chart(pieCtx, {
       type: 'pie',
       data: {
-        labels: data.labels,
+        labels: sortedRecoveredCases.labels,
         datasets: [{
           label: 'Recovered Cases',
-          data: data.total_recovered_cases,
+          data: sortedRecoveredCases.values,
           backgroundColor: [
-            'rgba(75, 192, 192, 0.2)',
-            'rgba(153, 102, 255, 0.2)',
-            'rgba(255, 159, 64, 0.2)',
-            'rgba(255, 206, 86, 0.2)'
+            'rgba(75, 192, 192, 0.2)',   
+            'rgba(153, 102, 255, 0.2)',  
+            'rgba(255, 159, 64, 0.2)',   
+            'rgba(255, 206, 86, 0.2)',   
+            'rgba(54, 162, 235, 0.2)',   
+            'rgba(255, 99, 132, 0.2)',   
+            'rgba(201, 203, 207, 0.2)',  
+            'rgba(255, 205, 86, 0.2)',   
+            'rgba(75, 192, 192, 0.2)',   
+            'rgba(153, 102, 255, 0.2)',  
+            'rgba(255, 159, 64, 0.2)',   
+            'rgba(54, 162, 235, 0.2)',   
+            'rgba(255, 99, 132, 0.2)',   
+            'rgba(201, 203, 207, 0.2)',  
+            'rgba(255, 205, 86, 0.2)',   
+            'rgba(75, 192, 192, 0.2)',   
+            'rgba(153, 102, 255, 0.2)',  
+            'rgba(255, 159, 64, 0.2)',   
+            'rgba(54, 162, 235, 0.2)',   
+            'rgba(255, 99, 132, 0.2)',   
+            'rgba(255, 205, 86, 0.2)'    
           ],
           borderColor: [
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)',
-            'rgba(255, 206, 86, 1)'
+            'rgba(75, 192, 192, 1)',    
+            'rgba(153, 102, 255, 1)',   
+            'rgba(255, 159, 64, 1)',    
+            'rgba(255, 206, 86, 1)',    
+            'rgba(54, 162, 235, 1)',    
+            'rgba(255, 99, 132, 1)',    
+            'rgba(201, 203, 207, 1)',   
+            'rgba(255, 205, 86, 1)',    
+            'rgba(75, 192, 192, 1)',    
+            'rgba(153, 102, 255, 1)',   
+            'rgba(255, 159, 64, 1)',    
+            'rgba(54, 162, 235, 1)',    
+            'rgba(255, 99, 132, 1)',    
+            'rgba(201, 203, 207, 1)',   
+            'rgba(255, 205, 86, 1)',    
+            'rgba(75, 192, 192, 1)',    
+            'rgba(153, 102, 255, 1)',   
+            'rgba(255, 159, 64, 1)',    
+            'rgba(54, 162, 235, 1)',    
+            'rgba(255, 99, 132, 1)',    
+            'rgba(255, 205, 86, 1)'     
           ],
           borderWidth: 1
         }]
+      },
+      options: {
+        plugins: {
+          title: {
+            display: true,
+            text: 'Pie Chart for Recovered Cases by Province'
+          }
+        }
       }
     });
   }

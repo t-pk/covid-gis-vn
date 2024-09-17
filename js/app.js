@@ -1,13 +1,12 @@
 require([
   "esri/views/MapView",
   "esri/WebMap",
-  "esri/widgets/Legend",
   "esri/widgets/Expand",
   "esri/widgets/Bookmarks",
   "esri/core/promiseUtils",
   "esri/core/reactiveUtils",
   "./js/layerDataViewUtils.js"
-], (MapView, WebMap, Legend, Expand, Bookmarks, promiseUtils, reactiveUtils, layerDataViewUtils) => {
+], (MapView, WebMap, Expand, Bookmarks, promiseUtils, reactiveUtils, layerDataViewUtils) => {
 
   let highlightHandle = null;
 
@@ -61,7 +60,6 @@ require([
 
   async function initializeMap() {
     await view.when();
-
     const layer_csv = webmap.layers.getItemAt(1);
     const layer_map = webmap.layers.getItemAt(0);
     layer_map.outFields = ["name", "id"];
@@ -79,10 +77,15 @@ require([
     // Wait for layer views to load
     const layerMapView = await view.whenLayerView(layer_map);
     const layerDataView = await view.whenLayerView(layer_csv);
-
     const csvData = {};
 
-    layerDataViewUtils.updateLayerDataView(layerDataView, view, layer_map, csvData);
+    promiseUtils.eachAlways([
+      layerDataViewUtils
+    ]).then(() => {
+      layerDataViewUtils.updateLayerDataView(layerDataView, view, layer_map, csvData);
+    }).catch((error) => {
+      console.error("Error loading modules: ", error);
+    });
 
     view.on("click", async (event) => {
       event.stopPropagation();

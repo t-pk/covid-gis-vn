@@ -50,7 +50,6 @@ define([
         return;
       }
 
-      // Xử lý dữ liệu
       const data = {
         labels: [],
         total_infected_cases: [],
@@ -59,32 +58,66 @@ define([
         total_recovered_cases: []
       };
 
-      graphics.forEach(graphic => {
+      let provinceData = graphics.map(graphic => {
         const attributes = graphic.attributes;
-        data.labels.push(attributes.province);
-        data.total_infected_cases.push(attributes.total_infected_cases);
-        data.today_infected_cases.push(attributes.today_infected_cases);
-        data.deaths.push(attributes.deaths);
-        data.total_recovered_cases.push(attributes.total_recovered_cases);
+        return {
+          province: attributes.province,
+          total_infected_cases: attributes.total_infected_cases,
+          today_infected_cases: attributes.today_infected_cases,
+          deaths: attributes.deaths,
+          total_recovered_cases: attributes.total_recovered_cases
+        };
       });
+      
 
+      provinceData.sort((a, b) => b.today_infected_cases - a.today_infected_cases);
+
+      const top20Provinces = provinceData.slice(0, 20);
+
+      const otherProvinces = provinceData.slice(20).reduce((acc, province) => {
+        acc.total_infected_cases += province.total_infected_cases;
+        acc.today_infected_cases += province.today_infected_cases;
+        acc.deaths += province.deaths;
+        acc.total_recovered_cases += province.total_recovered_cases;
+        return acc;
+      }, {
+        province: "Other",
+        total_infected_cases: 0,
+        today_infected_cases: 0,
+        deaths: 0,
+        total_recovered_cases: 0
+      });
+      
+
+      top20Provinces.forEach(province => {
+        data.labels.push(province.province);
+        data.total_infected_cases.push(province.total_infected_cases);
+        data.today_infected_cases.push(province.today_infected_cases);
+        data.deaths.push(province.deaths);
+        data.total_recovered_cases.push(province.total_recovered_cases);
+      });
+      
+      data.labels.push(otherProvinces.province);
+      data.total_infected_cases.push(otherProvinces.total_infected_cases);
+      data.today_infected_cases.push(otherProvinces.today_infected_cases);
+      data.deaths.push(otherProvinces.deaths);
+      data.total_recovered_cases.push(otherProvinces.total_recovered_cases);
+      
       Chart.createCharts(data);
+      
       view.closePopup();
 
-      // Lấy dữ liệu từ graphics và tạo csvData cho attribute hiện tại
       graphics.forEach((graphic) => {
         const province = graphic.attributes.province;
         const totalCases = graphic.attributes[attribute];
         csvData[province] = totalCases;
       });
 
-      // Tính giá trị min và max cho attribute hiện tại
       const values = Object.values(csvData);
       const min = Math.min(...values);
       const max = Math.max(...values);
       const colors = colorSchemes[attribute];
 
-      // Tạo renderer cho từng province
       const renderer = {
         type: "unique-value",
         field: "name",
