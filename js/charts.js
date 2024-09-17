@@ -3,21 +3,36 @@ define([], function () {
   let lineChartInstance = null;
   let pieChartInstance = null;
 
-  function createCharts(data) {
+  function createCharts(data, attribute) {
 
-    function sortData(labels, values) {
-      const combined = labels.map((label, index) => ({
-        label: label,
-        value: values[index]
-      }));
-      combined.sort((a, b) => b.value - a.value);
+    function sortData(provinceData, sortAttribute) {
+      provinceData.sort((a, b) => b[sortAttribute] - a[sortAttribute]);
+
+      const top20Provinces = provinceData.slice(0, 20);
+    
+      const otherProvinces = provinceData.slice(20).reduce((acc, province) => {
+        acc.total_infected_cases += province.total_infected_cases;
+        acc.today_infected_cases += province.today_infected_cases;
+        acc.deaths += province.deaths;
+        acc.total_recovered_cases += province.total_recovered_cases;
+        return acc;
+      }, {
+        province: "Other",
+        total_infected_cases: 0,
+        today_infected_cases: 0,
+        deaths: 0,
+        total_recovered_cases: 0
+      });
+    
+      top20Provinces.push(otherProvinces);
+    
       return {
-        labels: combined.map(item => item.label),
-        values: combined.map(item => item.value)
+        labels: top20Provinces.map(item => item.province),
+        values: top20Provinces.map(item => item[sortAttribute])
       };
-    }
+    }    
 
-    let sortedTodayInfectedCases = sortData(data.labels, data.today_infected_cases);
+    let sortedTodayInfectedCases = sortData(data, attribute);
     if (barChartInstance) {
       barChartInstance.destroy();
     }
@@ -48,7 +63,7 @@ define([], function () {
       lineChartInstance.destroy();
     }
 
-    let sortedDeaths = sortData(data.labels, data.deaths);
+    let sortedDeaths = sortData(data, attribute);
 
     const lineCtx = document.getElementById('lineChart').getContext('2d');
     lineChartInstance = new Chart(lineCtx, {
@@ -75,9 +90,10 @@ define([], function () {
 
     if (pieChartInstance) {
       pieChartInstance.destroy();
-    }
-    let sortedRecoveredCases = sortData(data.labels, data.total_recovered_cases);
-
+    };
+    console.log("data", data);
+    let sortedRecoveredCases = sortData(data, attribute);
+    console.log("sortedRecoveredCases", sortedRecoveredCases);
     const pieCtx = document.getElementById('pieChart').getContext('2d');
     pieChartInstance = new Chart(pieCtx, {
       type: 'pie',

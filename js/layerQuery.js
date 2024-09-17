@@ -1,10 +1,7 @@
 define([
   "./js/charts.js"
 ], function (Chart) {
-  function getColor(value, min, max, colors, attribute) {
-    const range = max - min;
-  
-    // Tính toán màu cho từng attribute riêng biệt
+  function getColor(value, colors, attribute) {
     if (attribute === "total_infected_cases") {
       if (value < 100) {
         return colors[0];
@@ -18,9 +15,8 @@ define([
         return colors[4];
       }
     }
-  
+
     if (attribute === "total_recovered_cases") {
-      // Tính toán màu cho thuộc tính hồi phục
       if (value < 100) {
         return colors[0];
       } else if (value <= 500) {
@@ -33,9 +29,8 @@ define([
         return colors[4];
       }
     }
-  
+
     if (attribute === "deaths") {
-      // Tính toán màu cho thuộc tính số ca tử vong
       if (value < 100) {
         return colors[0];
       } else if (value <= 200) {
@@ -86,6 +81,19 @@ define([
       });
 
       const graphics = results.features;
+      let provinceData = (graphics || []).map(graphic => {
+        const attributes = graphic.attributes;
+        return {
+          province: attributes.province || '',
+          total_infected_cases: attributes.total_infected_cases || 0,
+          today_infected_cases: attributes.today_infected_cases || 0,
+          deaths: attributes.deaths || 0,
+          total_recovered_cases: attributes.total_recovered_cases || 0
+        };
+      });
+
+      Chart.createCharts(provinceData, attribute);
+
       if (graphics.length === 0) {
         view.openPopup({
           title: "No Data",
@@ -96,83 +104,25 @@ define([
           type: "simple",
           symbol: { type: "simple-fill", color: "#ffffff", outline: { width: 1, color: "black" } }
         };
-        return;
+        return { renderer: layer_map.renderer };
       }
 
-      const data = {
-        labels: [],
-        total_infected_cases: [],
-        today_infected_cases: [],
-        deaths: [],
-        total_recovered_cases: []
-      };
-
-      let provinceData = graphics.map(graphic => {
-        const attributes = graphic.attributes;
-        return {
-          province: attributes.province,
-          total_infected_cases: attributes.total_infected_cases,
-          today_infected_cases: attributes.today_infected_cases,
-          deaths: attributes.deaths,
-          total_recovered_cases: attributes.total_recovered_cases
-        };
-      });
-      
-
-      provinceData.sort((a, b) => b.today_infected_cases - a.today_infected_cases);
-
-      const top20Provinces = provinceData.slice(0, 20);
-
-      const otherProvinces = provinceData.slice(20).reduce((acc, province) => {
-        acc.total_infected_cases += province.total_infected_cases;
-        acc.today_infected_cases += province.today_infected_cases;
-        acc.deaths += province.deaths;
-        acc.total_recovered_cases += province.total_recovered_cases;
-        return acc;
-      }, {
-        province: "Other",
-        total_infected_cases: 0,
-        today_infected_cases: 0,
-        deaths: 0,
-        total_recovered_cases: 0
-      });
-      
-
-      top20Provinces.forEach(province => {
-        data.labels.push(province.province);
-        data.total_infected_cases.push(province.total_infected_cases);
-        data.today_infected_cases.push(province.today_infected_cases);
-        data.deaths.push(province.deaths);
-        data.total_recovered_cases.push(province.total_recovered_cases);
-      });
-      
-      data.labels.push(otherProvinces.province);
-      data.total_infected_cases.push(otherProvinces.total_infected_cases);
-      data.today_infected_cases.push(otherProvinces.today_infected_cases);
-      data.deaths.push(otherProvinces.deaths);
-      data.total_recovered_cases.push(otherProvinces.total_recovered_cases);
-      
-      Chart.createCharts(data);
-      
       view.closePopup();
 
       graphics.forEach((graphic) => {
         const province = graphic.attributes.province;
         const totalCases = graphic.attributes[attribute];
-        csvData[province] = totalCases;
+        csvData[province] = totalCases || -1;
       });
 
-      const values = Object.values(csvData);
-      const min = Math.min(...values);
-      const max = Math.max(...values);
       const colors = colorSchemes[attribute];
 
       const renderer = {
         type: "unique-value",
         field: "name",
-        uniqueValueInfos: Object.keys(csvData).map((province) => {
+        uniqueValueInfos: Object.keys(csvData || []).map((province) => {
           const totalCases = csvData[province] || 0;
-          const color = getColor(totalCases, min, max, colors, attribute);
+          const color = getColor(totalCases, colors, attribute);
 
           return {
             value: province,
@@ -188,8 +138,9 @@ define([
         }
       };
 
-      const legendInfo = getLegendInfo(min, max, colors);
-      return { renderer, legendInfo };
+      // const legendInfo = getLegendInfo(min, max, colors);
+      // return { renderer, legendInfo };
+      return { renderer };
     } catch (error) {
       console.error("Query failed: ", error);
     }

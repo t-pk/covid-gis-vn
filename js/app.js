@@ -8,8 +8,6 @@ require([
   "./js/layerDataViewUtils.js"
 ], (MapView, WebMap, Expand, Bookmarks, promiseUtils, reactiveUtils, layerDataViewUtils) => {
 
-  let highlightHandle = null;
-
   const webmap = new WebMap({ portalItem: { id: "1e254684c9bd41259e296eea06a0b1b0" } });
 
   const view = new MapView({ map: webmap, container: "viewDiv" });
@@ -157,33 +155,4 @@ require([
   }
 
   initializeMap();
-
-  const queryStatsOnDrag = promiseUtils.debounce((layerView, event) => {
-    console.log(layerView, event);
-    const query = layerView.layer.createQuery();
-    query.geometry = view.toMap(event);
-    query.distance = 1;
-    query.units = "miles";
-
-    layerView.queryObjectIds(query).then((ids) => {
-      if (highlightHandle) {
-        highlightHandle.remove();
-        highlightHandle = null;
-      }
-      highlightHandle = layerView.highlight(ids);
-    });
-
-    const statsQuery = query.clone();
-
-    return layerView.queryFeatures(statsQuery).then(
-      function (response) {
-        const stats = response.features[0].attributes;
-        console.log("layerView.queryFeatures", stats);
-        return stats;
-      },
-      function (e) {
-        console.error(e);
-      }
-    );
-  });
 });

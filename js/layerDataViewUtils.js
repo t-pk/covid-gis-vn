@@ -4,7 +4,7 @@ define([
 ], function (reactiveUtils, layerQuery) {
 
   function updateLayerDataView(layerDataView, view, layer_map, csvData) {
-    let dataLoaded = false; // Biến toàn cục
+    let dataLoaded = false;
     console.log("function updateLayerDataView(layerDataView, view, layer_map, csvData)");
     const colorSchemes = {
       "total_infected_cases": ["#ffedea", "#ffcec5", "#ffad9f", "#ff6f56", "#ef0000"],
