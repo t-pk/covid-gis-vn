@@ -1,19 +1,68 @@
 define([
   "./js/charts.js"
 ], function (Chart) {
-  function getColor(totalCases, min, max, colors) {
+  function getColor(value, min, max, colors, attribute) {
     const range = max - min;
-    if (totalCases <= min + range * 0.1) {
-      return colors[0];
-    } else if (totalCases <= min + range * 0.2) {
-      return colors[1];
-    } else if (totalCases <= min + range * 0.4) {
-      return colors[2];
-    } else if (totalCases <= min + range * 0.6) {
-      return colors[3];
-    } else {
-      return colors[4];
+  
+    // Tính toán màu cho từng attribute riêng biệt
+    if (attribute === "total_infected_cases") {
+      if (value < 100) {
+        return colors[0];
+      } else if (value <= 500) {
+        return colors[1];
+      } else if (value <= 1000) {
+        return colors[2];
+      } else if (value <= 5000) {
+        return colors[3];
+      } else {
+        return colors[4];
+      }
     }
+  
+    if (attribute === "total_recovered_cases") {
+      // Tính toán màu cho thuộc tính hồi phục
+      if (value < 100) {
+        return colors[0];
+      } else if (value <= 500) {
+        return colors[1];
+      } else if (value <= 1000) {
+        return colors[2];
+      } else if (value <= 5000) {
+        return colors[3];
+      } else {
+        return colors[4];
+      }
+    }
+  
+    if (attribute === "deaths") {
+      // Tính toán màu cho thuộc tính số ca tử vong
+      if (value < 100) {
+        return colors[0];
+      } else if (value <= 200) {
+        return colors[1];
+      } else if (value <= 400) {
+        return colors[2];
+      } else if (value <= 1000) {
+        return colors[3];
+      } else {
+        return colors[4];
+      }
+    }
+
+    if (attribute === "today_infected_cases") {
+      if (value < 100) {
+        return colors[0];
+      } else if (value <= 500) {
+        return colors[1];
+      } else if (value <= 1000) {
+        return colors[2];
+      } else if (value <= 5000) {
+        return colors[3];
+      } else {
+        return colors[4];
+      }
+    }
+    return colors[0];
   }
 
   function getLegendInfo(min, max, colors) {
@@ -38,7 +87,7 @@ define([
 
       const graphics = results.features;
       if (graphics.length === 0) {
-        view.popup.open({
+        view.openPopup({
           title: "No Data",
           content: `No data found for the selected date: ${dateInput.value}`,
           location: view.center
@@ -123,7 +172,7 @@ define([
         field: "name",
         uniqueValueInfos: Object.keys(csvData).map((province) => {
           const totalCases = csvData[province] || 0;
-          const color = getColor(totalCases, min, max, colors);
+          const color = getColor(totalCases, min, max, colors, attribute);
 
           return {
             value: province,
