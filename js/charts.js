@@ -1,7 +1,12 @@
 define([], function () {
   let comboChartInstance = null;
   let provinceChartInstance = null;
-
+  const mappingName = {
+    "total_infected_cases": "Tổng số ca nhiễm",
+    "today_infected_cases": "Tổng số ca nhiễm trong ngày hôm nay",
+    "deaths": "Tống số ca tử vong",
+    "total_recovered_cases": "Tổng số ca hồi phục, xuất viện"
+  }
   function createComboCharts(data, dateInput, attribute) {
     function filterDataByDate(provinceData, dateInput) {
       const currentDate = new Date(dateInput);
@@ -51,7 +56,7 @@ define([], function () {
         datasets: [
           {
             type: 'bar',
-            label: `${attribute.charAt(0).toUpperCase() + attribute.slice(1)} by Province`,
+            label: `Tổng số ca`,
             data: sortedData.values,
             backgroundColor: 'rgba(75, 192, 192, 0.6)',
             borderColor: 'rgba(75, 192, 192, 1)',
@@ -59,7 +64,7 @@ define([], function () {
           },
           {
             type: 'line',
-            label: 'Average',
+            label: 'Đường Trung bình Cộng',
             data: new Array(sortedData.labels.length).fill(averageValue),
             backgroundColor: 'rgba(255, 99, 132, 0.2)',
             borderColor: 'rgba(255, 99, 132, 1)',
@@ -77,19 +82,19 @@ define([], function () {
         plugins: {
           title: {
             display: true,
-            text: `${attribute.charAt(0).toUpperCase() + attribute.slice(1)} in Top 20 Provinces vs Average`
+            text: mappingName[attribute]
           }
         }
       }
     });
   }
-  function createProvinceChart(provinceData) {
+  function createProvinceCharts(provinceData, allData) {
     const ctx = document.getElementById('provinceChart').getContext('2d');
 
     if (provinceChartInstance) {
       provinceChartInstance.destroy();
     };
-      
+
     provinceChartInstance = new Chart(ctx, {
       type: 'pie',
       data: {
@@ -103,10 +108,10 @@ define([], function () {
             provinceData.total_recovered_cases
           ],
           backgroundColor: [
-            'rgba(255, 99, 132, 0.6)',   // Màu cho tổng số ca nhiễm
-            'rgba(54, 162, 235, 0.6)',   // Màu cho số ca nhiễm hôm nay
-            'rgba(255, 206, 86, 0.6)',   // Màu cho tử vong
-            'rgba(75, 192, 192, 0.6)'    // Màu cho hồi phục
+            'rgba(255, 99, 132, 0.6)',
+            'rgba(54, 162, 235, 0.6)',
+            'rgba(255, 206, 86, 0.6)',
+            'rgba(75, 192, 192, 0.6)'
           ],
           borderColor: [
             'rgba(255, 99, 132, 1)',
@@ -120,21 +125,76 @@ define([], function () {
       options: {
         plugins: {
           title: {
-            responsive: true,
-            // onResize: handleResize,
-            maintainAspectRatio: false,
             display: true,
-            text: provinceData.province  // Đặt tên chart là tên tỉnh
+            text: provinceData.province
           }
         }
       }
     });
+
+    function calculateOtherProvincesSum(attribute) {
+      const dateInput = document.getElementById('date-input');
+      const currentDate = new Date(dateInput.value);
+
+      return allData
+        .filter(item => {
+          const date = new Date(item.attributes.date);
+          return item.attributes.province !== provinceData.province && (date.toDateString() === currentDate.toDateString());
+        })
+        .reduce((sum, item) => sum + item.attributes[attribute], 0);
+    }
+
+    function createPieChart(attributeName, attributeColor, canvasId) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      const provinceValue = provinceData[attributeName];
+      const otherProvincesSum = calculateOtherProvincesSum(attributeName);
+
+      if (window[canvasId + 'Instance']) {
+        window[canvasId + 'Instance'].destroy();
+      }
+
+      window[canvasId + 'Instance'] = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: [provinceData.province, 'Các tỉnh thành còn lại'],
+          datasets: [{
+            label: mappingName[attributeName],
+            data: [provinceValue, otherProvincesSum],
+            backgroundColor: [
+              attributeColor,
+              'rgba(200, 200, 200, 0.6)'
+            ],
+            borderColor: [
+              'rgba(255, 255, 255, 1)',
+              'rgba(255, 255, 255, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: mappingName[attributeName]
+            }
+          },
+          responsive: false,
+          cutoutPercentage: 35,
+          legend: {
+            position: "bottom"
+          },
+        }
+      });
+    }
+
+    createPieChart('total_infected_cases', 'rgba(255, 99, 132, 0.6)', 'totalCasesChart');
+    createPieChart('today_infected_cases', 'rgba(54, 162, 235, 0.6)', 'todayCasesChart');
+    createPieChart('deaths', 'Deaths', 'deathsChart');
+    createPieChart('total_recovered_cases', 'rgba(75, 192, 192, 0.6)', 'recoveredChart');
   }
-
-
 
   return {
     createComboCharts: createComboCharts,
-    createProvinceChart: createProvinceChart
+    createProvinceCharts: createProvinceCharts
   };
 });

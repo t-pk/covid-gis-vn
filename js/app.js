@@ -105,55 +105,49 @@ require([
         fillOpacity: 0.2
       };
 
+
+      function buildWhereClause(selectedDate, provinceFromLayerData) {
+        return `date = DATE '${selectedDate}' AND province = '${provinceFromLayerData}'`;
+      }
+
+      async function fetchAndDisplayData(query, event) {
+        let responseData = await layerDataView.queryFeatures(query);
+        let responseData1 = await layerDataView.queryFeatures({});
+
+        if (responseData.features.length > 0) {
+          const provinceFromLayer0 = responseData.features[0];
+          const provinceFromLayer1 = responseData1.features;
+          Chart.createProvinceCharts(provinceFromLayer0.attributes, provinceFromLayer1);
+          view.openPopup({
+            title: "Thông tin chi tiết",
+            content: `
+                    <b>Province:</b> ${provinceFromLayer0.attributes.province}<br>
+                    <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
+                    <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
+                    <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
+                    <b>Total Recovered Cases:</b> ${provinceFromLayer0.attributes.total_recovered_cases}<br>
+                    <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
+            `,
+            location: event.mapPoint
+          });
+        }
+      }
+
       if (responseMap.features.length > 0) {
         const dateInput = document.getElementById('date-input');
         const queryCSV = layer_csv.createQuery();
         const provinceFromLayerData = responseMap.features[0].attributes.name;
 
-        queryCSV.where = `date = DATE '${dateInput.value}' AND province = '${provinceFromLayerData}'`
-        queryCSV.returnGeometry = true;
+        // Initial query and display
+        queryCSV.where = buildWhereClause(dateInput.value, provinceFromLayerData);
+        fetchAndDisplayData(queryCSV, event);
 
-        console.log("queryCSV", queryCSV);
+        // Add event listener for date changes
         dateInput.addEventListener('change', async (event) => {
           const selectedDate = event.target.value;
-
-          queryCSV.where = `date = DATE '${selectedDate}' AND province = '${provinceFromLayerData}'`
-          let responseData = await layerDataView.queryFeatures(queryCSV);
-          if (responseData.features.length > 0) {
-            const provinceFromLayer0 = responseData.features[0];
-            console.log("provinceFromLayer0", provinceFromLayer0);
-            Chart.createProvinceChart(provinceFromLayer0.attributes);
-            view.openPopup({
-              title: "Thông tin chi tiết",
-              content: `
-              <b>Province:</b> ${provinceFromLayer0.attributes.province}<br>
-              <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
-              <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
-              <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
-              <b>Total Recovered Cases:</b> ${provinceFromLayer0.attributes.total_recovered_cases}<br>
-              <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
-            `,
-              location: event.mapPoint
-            });
-          }
+          queryCSV.where = buildWhereClause(selectedDate, provinceFromLayerData);
+          fetchAndDisplayData(queryCSV, event);
         });
-        let responseData = await layerDataView.queryFeatures(queryCSV);
-        if (responseData.features.length > 0) {
-          const provinceFromLayer0 = responseData.features[0];
-          Chart.createProvinceChart(provinceFromLayer0.attributes);
-          view.openPopup({
-            title: "Thông tin chi tiết",
-            content: `
-              <b>Province:</b> ${provinceFromLayer0.attributes.province}<br>
-              <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
-              <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
-              <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
-              <b>Total Recovered Cases:</b> ${provinceFromLayer0.attributes.total_recovered_cases}<br>
-              <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
-            `,
-            location: event.mapPoint
-          });
-        }
       }
     });
   }

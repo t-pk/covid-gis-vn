@@ -41,7 +41,17 @@ body {
   font-weight: bolder;
 }
 
-.chart-parent {
+.chart-parent1 {
   width: 45%;
   height: 45%;
+}
+
+.chart-parent {
+  display: flex;
+  flex-direction: column; /* Or 'row' for horizontal arrangement */
+}
+
+.chart-row {
+  display: flex;
+  justify-content: space-between; /* Adjust spacing as needed */
 }

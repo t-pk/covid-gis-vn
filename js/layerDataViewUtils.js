@@ -24,21 +24,21 @@ define([
   
     async function retryQueryAndUpdateLayer() {
       console.log("retryQueryAndUpdateLayer before",  dataLoaded);
-      await queryAndUpdateLayer(); // Thực hiện query và cập nhật layer
+      await queryAndUpdateLayer();
       console.log("retryQueryAndUpdateLayer",  dataLoaded);
 
       if (!dataLoaded) {
         console.log("retryQueryAndUpdateLayer queryAndUpdateLayer",  dataLoaded);
         console.log("retryQueryAndUpdateLayer queryAndUpdateLayer 1000",  dataLoaded);
-        setTimeout(retryQueryAndUpdateLayer, 1000); // Thử lại sau 1 giây nếu dữ liệu chưa sẵn sàng
+        setTimeout(retryQueryAndUpdateLayer, 1000);
       }
     };
 
     reactiveUtils.when(
       () => !layerDataView.dataUpdating,
       () => {
-        dataLoaded = false; // Đặt lại biến khi bắt đầu query
-        retryQueryAndUpdateLayer(); // Bắt đầu quá trình retry
+        dataLoaded = false;
+        retryQueryAndUpdateLayer();
       }
     );
 
