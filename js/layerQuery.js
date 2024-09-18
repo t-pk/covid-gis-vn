@@ -72,6 +72,7 @@ define([
   }
 
   async function queryAndUpdateLayer(layerDataView, view, layer_map, csvData, attribute, colorSchemes) {
+
     const dateInput = document.getElementById('date-input');
     try {
       const results = await layerDataView.queryFeatures({
@@ -81,18 +82,26 @@ define([
       });
 
       const graphics = results.features;
-      let provinceData = (graphics || []).map(graphic => {
+      const results1 = await layerDataView.queryFeatures({
+        geometry: view.extent,
+        returnGeometry: true,
+      });
+
+      const graphics1 = results1.features;
+
+      let provinceData = (graphics1 || []).map(graphic => {
         const attributes = graphic.attributes;
         return {
           province: attributes.province || '',
           total_infected_cases: attributes.total_infected_cases || 0,
           today_infected_cases: attributes.today_infected_cases || 0,
           deaths: attributes.deaths || 0,
-          total_recovered_cases: attributes.total_recovered_cases || 0
+          total_recovered_cases: attributes.total_recovered_cases || 0,
+          date: attributes.date
         };
       });
 
-      Chart.createCharts(provinceData, attribute);
+      Chart.createComboCharts(provinceData, dateInput.value, attribute);
 
       if (graphics.length === 0) {
         view.openPopup({

@@ -1,152 +1,118 @@
 define([], function () {
-  let barChartInstance = null;
-  let lineChartInstance = null;
-  let pieChartInstance = null;
+  let comboChartInstance = null;
+  let provinceChartInstance = null;
 
-  function createCharts(data, attribute) {
+  function createComboCharts(data, dateInput, attribute) {
+    function filterDataByDate(provinceData, dateInput) {
+      const currentDate = new Date(dateInput);
+      return provinceData.filter(item => {
+        const date = new Date(item.date);
+        return date.toDateString() === currentDate.toDateString();
+      });
+    }
 
-    function sortData(provinceData, sortAttribute) {
-      provinceData.sort((a, b) => b[sortAttribute] - a[sortAttribute]);
+    function sortAndAggregate(provinceData, attribute) {
+      provinceData.sort((a, b) => b[attribute] - a[attribute]);
 
       const top20Provinces = provinceData.slice(0, 20);
-    
+
       const otherProvinces = provinceData.slice(20).reduce((acc, province) => {
-        acc.total_infected_cases += province.total_infected_cases;
-        acc.today_infected_cases += province.today_infected_cases;
-        acc.deaths += province.deaths;
-        acc.total_recovered_cases += province.total_recovered_cases;
+        acc[attribute] += province[attribute];
         return acc;
-      }, {
-        province: "Other",
-        total_infected_cases: 0,
-        today_infected_cases: 0,
-        deaths: 0,
-        total_recovered_cases: 0
-      });
-    
+      }, { province: "Other", [attribute]: 0 });
+
       top20Provinces.push(otherProvinces);
-    
+
       return {
         labels: top20Provinces.map(item => item.province),
-        values: top20Provinces.map(item => item[sortAttribute])
+        values: top20Provinces.map(item => item[attribute])
       };
-    }    
-
-    let sortedTodayInfectedCases = sortData(data, attribute);
-    if (barChartInstance) {
-      barChartInstance.destroy();
     }
 
-    const barCtx = document.getElementById('barChart').getContext('2d');
-    barChartInstance = new Chart(barCtx, {
+    function calculateAverage(data, attribute) {
+      const total = data.reduce((sum, item) => sum + item[attribute], 0);
+      return (parseFloat(total / data.length).toFixed(0));
+    }
+
+    const filteredData = filterDataByDate(data, dateInput);
+    const sortedData = sortAndAggregate(filteredData, attribute);
+    const averageValue = calculateAverage(filteredData, attribute);
+
+    if (comboChartInstance) {
+      comboChartInstance.destroy();
+    }
+
+    const ctx = document.getElementById('comboChart').getContext('2d');
+
+    comboChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: sortedTodayInfectedCases.labels,
-        datasets: [{
-          label: 'Today Infected Cases',
-          data: sortedTodayInfectedCases.values,
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          borderColor: 'rgba(255, 99, 132, 1)',
-          borderWidth: 1
-        }]
+        labels: sortedData.labels,
+        datasets: [
+          {
+            type: 'bar',
+            label: `${attribute.charAt(0).toUpperCase() + attribute.slice(1)} by Province`,
+            data: sortedData.values,
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          },
+          {
+            type: 'line',
+            label: 'Average',
+            data: new Array(sortedData.labels.length).fill(averageValue),
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+            fill: false
+          }
+        ]
       },
       options: {
         scales: {
           y: {
             beginAtZero: true
           }
-        }
-      }
-    });
-
-    if (lineChartInstance) {
-      lineChartInstance.destroy();
-    }
-
-    let sortedDeaths = sortData(data, attribute);
-
-    const lineCtx = document.getElementById('lineChart').getContext('2d');
-    lineChartInstance = new Chart(lineCtx, {
-      type: 'line',
-      data: {
-        labels: sortedDeaths.labels,
-        datasets: [{
-          label: 'Deaths',
-          data: sortedDeaths.values,
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-          fill: true
-        }]
-      },
-      options: {
-        scales: {
-          y: {
-            beginAtZero: true
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: `${attribute.charAt(0).toUpperCase() + attribute.slice(1)} in Top 20 Provinces vs Average`
           }
         }
       }
     });
+  }
+  function createProvinceChart(provinceData) {
+    const ctx = document.getElementById('provinceChart').getContext('2d');
 
-    if (pieChartInstance) {
-      pieChartInstance.destroy();
+    if (provinceChartInstance) {
+      provinceChartInstance.destroy();
     };
-    console.log("data", data);
-    let sortedRecoveredCases = sortData(data, attribute);
-    console.log("sortedRecoveredCases", sortedRecoveredCases);
-    const pieCtx = document.getElementById('pieChart').getContext('2d');
-    pieChartInstance = new Chart(pieCtx, {
+      
+    provinceChartInstance = new Chart(ctx, {
       type: 'pie',
       data: {
-        labels: sortedRecoveredCases.labels,
+        labels: ['Tổng số ca nhiễm', 'Số ca nhiễm hôm nay', 'Tử vong', 'Hồi phục'],
         datasets: [{
-          label: 'Recovered Cases',
-          data: sortedRecoveredCases.values,
+          label: provinceData.province,
+          data: [
+            provinceData.total_infected_cases,
+            provinceData.today_infected_cases,
+            provinceData.deaths,
+            provinceData.total_recovered_cases
+          ],
           backgroundColor: [
-            'rgba(75, 192, 192, 0.2)',   
-            'rgba(153, 102, 255, 0.2)',  
-            'rgba(255, 159, 64, 0.2)',   
-            'rgba(255, 206, 86, 0.2)',   
-            'rgba(54, 162, 235, 0.2)',   
-            'rgba(255, 99, 132, 0.2)',   
-            'rgba(201, 203, 207, 0.2)',  
-            'rgba(255, 205, 86, 0.2)',   
-            'rgba(75, 192, 192, 0.2)',   
-            'rgba(153, 102, 255, 0.2)',  
-            'rgba(255, 159, 64, 0.2)',   
-            'rgba(54, 162, 235, 0.2)',   
-            'rgba(255, 99, 132, 0.2)',   
-            'rgba(201, 203, 207, 0.2)',  
-            'rgba(255, 205, 86, 0.2)',   
-            'rgba(75, 192, 192, 0.2)',   
-            'rgba(153, 102, 255, 0.2)',  
-            'rgba(255, 159, 64, 0.2)',   
-            'rgba(54, 162, 235, 0.2)',   
-            'rgba(255, 99, 132, 0.2)',   
-            'rgba(255, 205, 86, 0.2)'    
+            'rgba(255, 99, 132, 0.6)',   // Màu cho tổng số ca nhiễm
+            'rgba(54, 162, 235, 0.6)',   // Màu cho số ca nhiễm hôm nay
+            'rgba(255, 206, 86, 0.6)',   // Màu cho tử vong
+            'rgba(75, 192, 192, 0.6)'    // Màu cho hồi phục
           ],
           borderColor: [
-            'rgba(75, 192, 192, 1)',    
-            'rgba(153, 102, 255, 1)',   
-            'rgba(255, 159, 64, 1)',    
-            'rgba(255, 206, 86, 1)',    
-            'rgba(54, 162, 235, 1)',    
-            'rgba(255, 99, 132, 1)',    
-            'rgba(201, 203, 207, 1)',   
-            'rgba(255, 205, 86, 1)',    
-            'rgba(75, 192, 192, 1)',    
-            'rgba(153, 102, 255, 1)',   
-            'rgba(255, 159, 64, 1)',    
-            'rgba(54, 162, 235, 1)',    
-            'rgba(255, 99, 132, 1)',    
-            'rgba(201, 203, 207, 1)',   
-            'rgba(255, 205, 86, 1)',    
-            'rgba(75, 192, 192, 1)',    
-            'rgba(153, 102, 255, 1)',   
-            'rgba(255, 159, 64, 1)',    
-            'rgba(54, 162, 235, 1)',    
-            'rgba(255, 99, 132, 1)',    
-            'rgba(255, 205, 86, 1)'     
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)'
           ],
           borderWidth: 1
         }]
@@ -154,15 +120,21 @@ define([], function () {
       options: {
         plugins: {
           title: {
+            responsive: true,
+            // onResize: handleResize,
+            maintainAspectRatio: false,
             display: true,
-            text: 'Pie Chart for Recovered Cases by Province'
+            text: provinceData.province  // Đặt tên chart là tên tỉnh
           }
         }
       }
     });
   }
 
+
+
   return {
-    createCharts: createCharts
+    createComboCharts: createComboCharts,
+    createProvinceChart: createProvinceChart
   };
 });

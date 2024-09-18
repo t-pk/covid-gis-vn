@@ -5,8 +5,9 @@ require([
   "esri/widgets/Bookmarks",
   "esri/core/promiseUtils",
   "esri/core/reactiveUtils",
-  "./js/layerDataViewUtils.js"
-], (MapView, WebMap, Expand, Bookmarks, promiseUtils, reactiveUtils, layerDataViewUtils) => {
+  "./js/layerDataViewUtils.js",
+  "./js/charts.js"
+], (MapView, WebMap, Expand, Bookmarks, promiseUtils, reactiveUtils, layerDataViewUtils, Chart) => {
 
   const webmap = new WebMap({ portalItem: { id: "1e254684c9bd41259e296eea06a0b1b0" } });
 
@@ -120,6 +121,8 @@ require([
           let responseData = await layerDataView.queryFeatures(queryCSV);
           if (responseData.features.length > 0) {
             const provinceFromLayer0 = responseData.features[0];
+            console.log("provinceFromLayer0", provinceFromLayer0);
+            Chart.createProvinceChart(provinceFromLayer0.attributes);
             view.openPopup({
               title: "Thông tin chi tiết",
               content: `
@@ -137,6 +140,7 @@ require([
         let responseData = await layerDataView.queryFeatures(queryCSV);
         if (responseData.features.length > 0) {
           const provinceFromLayer0 = responseData.features[0];
+          Chart.createProvinceChart(provinceFromLayer0.attributes);
           view.openPopup({
             title: "Thông tin chi tiết",
             content: `

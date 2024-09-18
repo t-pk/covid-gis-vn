@@ -40,3 +40,8 @@ body {
   font-size: 20pt;
   font-weight: bolder;
 }
+
+.chart-parent {
+  width: 45%;
+  height: 45%;
+}
