@@ -67,7 +67,7 @@ require([
       "total_infected_cases",
       "today_infected_cases",
       "deaths",
-      "total_recovered_cases",
+      "today_recovered_cases",
       "date"
     ];
 
@@ -131,7 +131,7 @@ require([
                     <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
                     <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
                     <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
-                    <b>Total Recovered Cases:</b> ${provinceFromLayer0.attributes.total_recovered_cases}<br>
+                    <b>Today Recovered Cases:</b> ${provinceFromLayer0.attributes.today_recovered_cases}<br>
                     <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
             `,
             location: event.mapPoint

@@ -16,7 +16,7 @@ define([
       }
     }
 
-    if (attribute === "total_recovered_cases") {
+    if (attribute === "today_recovered_cases") {
       if (value < 100) {
         return colors[0];
       } else if (value <= 500) {
@@ -76,7 +76,7 @@ define([
     const dateInput = document.getElementById('date-input');
     const endDate = new Date(dateInput.value);
     const startDate = new Date(endDate);
-    startDate.setDate(endDate.getDate() - 30); // 30 ngày trước
+    startDate.setDate(endDate.getDate() - 60); // 60 ngày trước
 
     try {
       const results = await layerDataView.queryFeatures({
@@ -100,7 +100,7 @@ define([
           total_infected_cases: attributes.total_infected_cases || 0,
           today_infected_cases: attributes.today_infected_cases || 0,
           deaths: attributes.deaths || 0,
-          total_recovered_cases: attributes.total_recovered_cases || 0,
+          today_recovered_cases: attributes.today_recovered_cases || 0,
           date: attributes.date
         };
       });
@@ -122,7 +122,7 @@ define([
           total_infected_cases: attributes.total_infected_cases || 0,
           today_infected_cases: attributes.today_infected_cases || 0,
           deaths: attributes.deaths || 0,
-          total_recovered_cases: attributes.total_recovered_cases || 0
+          today_recovered_cases: attributes.today_recovered_cases || 0
         };
       });
   

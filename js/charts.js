@@ -9,7 +9,7 @@ define([], function () {
     "total_infected_cases": "Tổng số ca nhiễm",
     "today_infected_cases": "Tổng số ca nhiễm trong ngày",
     "deaths": "Tống số ca tử vong",
-    "total_recovered_cases": "Tổng số ca hồi phục, xuất viện"
+    "today_recovered_cases": "Tổng số ca hồi phục, xuất viện trong ngày"
   };
   function createLineChart(provinceData, canvasId, attribute) {
     const ctx = document.getElementById(canvasId).getContext('2d');
@@ -51,7 +51,7 @@ define([], function () {
   
     // Sort data by date before aggregation
     const sortedData = sortDataByDate(provinceData);
-    const aggregatedData = aggregateData(sortedData, 15);
+    const aggregatedData = aggregateData(sortedData, 30);
   
     lineChartInstance = new Chart(ctx, {
       type: 'line',
@@ -71,7 +71,7 @@ define([], function () {
         plugins: {
           title: {
             display: true,
-            text: `${mappingName[attribute]} - Trở về 30 ngày trước`
+            text: `${mappingName[attribute]} - Trở về 60 ngày trước`
           }
         },
         scales: {
@@ -191,7 +191,7 @@ define([], function () {
             provinceData.total_infected_cases,
             provinceData.today_infected_cases,
             provinceData.deaths,
-            provinceData.total_recovered_cases
+            provinceData.today_recovered_cases
           ],
           backgroundColor: [
             'rgba(255, 99, 132, 0.6)',
@@ -286,7 +286,7 @@ define([], function () {
     createOrUpdatePieChart('total_infected_cases', 'rgba(255, 99, 132, 0.6)', 'totalCasesChart');
     createOrUpdatePieChart('today_infected_cases', 'rgba(54, 162, 235, 0.6)', 'todayCasesChart');
     createOrUpdatePieChart('deaths', 'rgba(255, 159, 64, 0.6)', 'deathsChart');
-    createOrUpdatePieChart('total_recovered_cases', 'rgba(75, 192, 192, 0.6)', 'recoveredChart');
+    createOrUpdatePieChart('today_recovered_cases', 'rgba(75, 192, 192, 0.6)', 'recoveredChart');
   }    
 
   function clearProvinceCharts(){

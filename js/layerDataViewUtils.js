@@ -10,7 +10,7 @@ define([
       "total_infected_cases": ["#ffedea", "#ffcec5", "#ffad9f", "#ff6f56", "#ef0000"],
       "today_infected_cases": ["#f3e5f5", "#e1bee7", "#ce93d8", "#ab47bc", "#6a1b9a"],
       "deaths": ["#e0e0e0", "#bdbdbd", "#9e9e9e", "#616161", "#000000"],
-      "total_recovered_cases": ["#e8f5e9", "#c8e6c9", "#a5d6a7", "#66bb6a", "#2e7d32"]
+      "today_recovered_cases": ["#e8f5e9", "#c8e6c9", "#a5d6a7", "#66bb6a", "#2e7d32"]
     };
 
     async function queryAndUpdateLayer() {
