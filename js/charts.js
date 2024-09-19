@@ -1,15 +1,98 @@
 define([], function () {
   let comboChartInstance = null;
   let provinceChartInstance = null;
-  const chartManager = {
+  let lineChartInstance = null;
+  let chartManager = {
     charts: {}
   };
   const mappingName = {
     "total_infected_cases": "Tổng số ca nhiễm",
-    "today_infected_cases": "Tổng số ca nhiễm trong ngày hôm nay",
+    "today_infected_cases": "Tổng số ca nhiễm trong ngày",
     "deaths": "Tống số ca tử vong",
     "total_recovered_cases": "Tổng số ca hồi phục, xuất viện"
+  };
+  function createLineChart(provinceData, canvasId, attribute) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    if(lineChartInstance){
+      lineChartInstance.destroy()
+    }
+    // Helper function to format timestamps as dd/mm
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+      return `${day}/${month}`;
+    }
+  
+    // Ensure data is sorted by date
+    function sortDataByDate(data) {
+      return data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+  
+    // Aggregate data to have at most 15 points
+    function aggregateData(data, maxPoints) {
+      const interval = Math.ceil(data.length / maxPoints);
+      const aggregatedData = [];
+  
+      for (let i = 0; i < data.length; i += interval) {
+        const slice = data.slice(i, i + interval);
+        const aggregatedItem = slice.reduce((acc, item) => {
+          acc[attribute] += item[attribute];
+          return acc;
+        }, { [attribute]: 0, date: slice[0].date });
+  
+        // Use the middle timestamp for label
+        aggregatedItem.date = slice[Math.floor(slice.length / 2)].date;
+        aggregatedData.push(aggregatedItem);
+      }
+  
+      return aggregatedData;
+    }
+  
+    // Sort data by date before aggregation
+    const sortedData = sortDataByDate(provinceData);
+    const aggregatedData = aggregateData(sortedData, 15);
+  
+    lineChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: aggregatedData.map(item => formatDate(item.date)),
+        datasets: [{
+          label: mappingName[attribute],
+          data: aggregatedData.map(item => item[attribute]),
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: `${mappingName[attribute]} - Trở về 30 ngày trước`
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Date'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: attribute
+            }
+          }
+        }
+      }
+    });
   }
+  
+  
   function createComboCharts(data, dateInput, attribute) {
     function filterDataByDate(provinceData, dateInput) {
       const currentDate = new Date(dateInput);
@@ -148,31 +231,29 @@ define([], function () {
     }
 
     function createOrUpdatePieChart(attributeName, attributeColor, canvasId) {
+      const dateInput = document.getElementById('date-input');
+
       const ctx = document.getElementById(canvasId).getContext('2d');
       const provinceValue = provinceData[attributeName];
       const otherProvincesSum = calculateOtherProvincesSum(attributeName);
     
-      // Default title if mappingName does not contain the attributeName
-      const chartTitle = mappingName[attributeName] || 'Default Title';
+      const chartTitle = mappingName[attributeName];
       const labels = [provinceData.province, 'Các tỉnh thành còn lại'];
     
-      // Check if the chart instance already exists
       if (chartManager.charts[canvasId]) {
-        // Update the existing chart
         const chart = chartManager.charts[canvasId];
-        chart.data.labels = labels; // Update labels
-        chart.data.datasets[0].data = [provinceValue, otherProvincesSum]; // Update data
-        chart.data.datasets[0].backgroundColor[0] = attributeColor; // Update backgroundColor
-        chart.options.plugins.title.text = chartTitle; // Update title
-        chart.update(); // Refresh the chart
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = [provinceValue, otherProvincesSum];
+        chart.data.datasets[0].backgroundColor[0] = attributeColor;
+        chart.options.plugins.title.text = chartTitle;
+        chart.update();
       } else {
-        // Create a new chart and store it in the global object
         chartManager.charts[canvasId] = new Chart(ctx, {
           type: 'pie',
           data: {
             labels: labels, // Set labels
             datasets: [{
-              label: chartTitle,
+              label: mappingName[attributeName],
               data: [provinceValue, otherProvincesSum],
               backgroundColor: [
                 attributeColor,
@@ -201,16 +282,29 @@ define([], function () {
         });
       }
     }
-    
-    // Example function calls
+
     createOrUpdatePieChart('total_infected_cases', 'rgba(255, 99, 132, 0.6)', 'totalCasesChart');
     createOrUpdatePieChart('today_infected_cases', 'rgba(54, 162, 235, 0.6)', 'todayCasesChart');
     createOrUpdatePieChart('deaths', 'rgba(255, 159, 64, 0.6)', 'deathsChart');
     createOrUpdatePieChart('total_recovered_cases', 'rgba(75, 192, 192, 0.6)', 'recoveredChart');
   }    
 
+  function clearProvinceCharts(){
+    provinceChartInstance.destroy();
+    Object.keys(chartManager.charts).forEach((canvasId) => {
+      if (chartManager.charts[canvasId]) {
+        chartManager.charts[canvasId].destroy();
+      }
+    });
+    chartManager = {
+      charts: {}
+    };
+  };
+
   return {
     createComboCharts: createComboCharts,
-    createProvinceCharts: createProvinceCharts
+    createProvinceCharts: createProvinceCharts,
+    clearProvinceCharts: clearProvinceCharts,
+    createLineChart: createLineChart
   };
 });

@@ -109,9 +109,16 @@ require([
         return `date = DATE '${selectedDate}' AND province = '${provinceFromLayerData}'`;
       }
 
+      function buildWhereClause1() {
+        const dateInput = document.getElementById('date-input').value;
+        return `date = DATE '${dateInput}'`;
+      }
+
       async function fetchAndDisplayData(query, event) {
         let responseData = await layerDataView.queryFeatures(query);
-        let responseData1 = await layerDataView.queryFeatures({});
+        let query1 = layer_csv.createQuery();
+        query1.where = buildWhereClause1();
+        let responseData1 = await layerDataView.queryFeatures(query1);
 
         if (responseData.features.length > 0) {
           const provinceFromLayer0 = responseData.features[0];
@@ -143,9 +150,31 @@ require([
 
         // Add event listener for date changes
         dateInput.addEventListener('change', async (event) => {
-          const selectedDate = event.target.value;
-          queryCSV.where = buildWhereClause(selectedDate, provinceFromLayerData);
-          fetchAndDisplayData(queryCSV, event);
+          if (currentHighlight) {
+            currentHighlight.remove();
+            currentHighlight = null;
+            Chart.clearProvinceCharts();
+          }
+        });
+        const attribute = document.getElementById('attribute-select');
+        attribute.addEventListener('change', async (event) => {
+          if (currentHighlight) {
+            currentHighlight.remove();
+            currentHighlight = null;
+            Chart.clearProvinceCharts();
+          }
+        });
+      }
+      else {
+        if (currentHighlight) {
+          currentHighlight.remove();
+          currentHighlight = null;
+          Chart.clearProvinceCharts();
+        }
+        view.openPopup({
+          title: "No data",
+          location: event.mapPoint, // Vị trí click
+          content: "No data available for this location."
         });
       }
     });

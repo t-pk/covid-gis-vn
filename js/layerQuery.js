@@ -74,6 +74,10 @@ define([
   async function queryAndUpdateLayer(layerDataView, view, layer_map, csvData, attribute, colorSchemes) {
 
     const dateInput = document.getElementById('date-input');
+    const endDate = new Date(dateInput.value);
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 30); // 30 ngày trước
+
     try {
       const results = await layerDataView.queryFeatures({
         geometry: view.extent,
@@ -102,7 +106,29 @@ define([
       });
 
       Chart.createComboCharts(provinceData, dateInput.value, attribute);
-
+      const results2 = await layerDataView.queryFeatures({
+        geometry: view.extent,
+        returnGeometry: true,
+        where: `date >= DATE '${startDate.toISOString().split('T')[0]}' AND date <= DATE '${endDate.toISOString().split('T')[0]}'`
+      });
+  
+      const graphics2 = results2.features;
+  
+      // Chuyển đổi dữ liệu
+      const provinceData1 = (graphics2 || []).map(graphic => {
+        const attributes = graphic.attributes;
+        return {
+          date: attributes.date,
+          total_infected_cases: attributes.total_infected_cases || 0,
+          today_infected_cases: attributes.today_infected_cases || 0,
+          deaths: attributes.deaths || 0,
+          total_recovered_cases: attributes.total_recovered_cases || 0
+        };
+      });
+  
+      // Gọi hàm tạo biểu đồ line
+      Chart.createLineChart(provinceData1, 'lineChartCanvas', attribute);
+  
       if (graphics.length === 0) {
         view.openPopup({
           title: "No Data",
