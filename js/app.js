@@ -105,7 +105,6 @@ require([
         fillOpacity: 0.2
       };
 
-
       function buildWhereClause(selectedDate, provinceFromLayerData) {
         return `date = DATE '${selectedDate}' AND province = '${provinceFromLayerData}'`;
       }

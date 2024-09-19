@@ -1,6 +1,9 @@
 define([], function () {
   let comboChartInstance = null;
   let provinceChartInstance = null;
+  const chartManager = {
+    charts: {}
+  };
   const mappingName = {
     "total_infected_cases": "Tổng số ca nhiễm",
     "today_infected_cases": "Tổng số ca nhiễm trong ngày hôm nay",
@@ -144,54 +147,67 @@ define([], function () {
         .reduce((sum, item) => sum + item.attributes[attribute], 0);
     }
 
-    function createPieChart(attributeName, attributeColor, canvasId) {
+    function createOrUpdatePieChart(attributeName, attributeColor, canvasId) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       const provinceValue = provinceData[attributeName];
       const otherProvincesSum = calculateOtherProvincesSum(attributeName);
-
-      if (window[canvasId + 'Instance']) {
-        window[canvasId + 'Instance'].destroy();
+    
+      // Default title if mappingName does not contain the attributeName
+      const chartTitle = mappingName[attributeName] || 'Default Title';
+      const labels = [provinceData.province, 'Các tỉnh thành còn lại'];
+    
+      // Check if the chart instance already exists
+      if (chartManager.charts[canvasId]) {
+        // Update the existing chart
+        const chart = chartManager.charts[canvasId];
+        chart.data.labels = labels; // Update labels
+        chart.data.datasets[0].data = [provinceValue, otherProvincesSum]; // Update data
+        chart.data.datasets[0].backgroundColor[0] = attributeColor; // Update backgroundColor
+        chart.options.plugins.title.text = chartTitle; // Update title
+        chart.update(); // Refresh the chart
+      } else {
+        // Create a new chart and store it in the global object
+        chartManager.charts[canvasId] = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: labels, // Set labels
+            datasets: [{
+              label: chartTitle,
+              data: [provinceValue, otherProvincesSum],
+              backgroundColor: [
+                attributeColor,
+                'rgba(200, 200, 200, 0.6)'
+              ],
+              borderColor: [
+                'rgba(255, 255, 255, 1)',
+                'rgba(255, 255, 255, 1)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            plugins: {
+              title: {
+                display: true,
+                text: chartTitle
+              }
+            },
+            responsive: false,
+            cutoutPercentage: 35,
+            legend: {
+              position: "bottom"
+            },
+          }
+        });
       }
-
-      window[canvasId + 'Instance'] = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: [provinceData.province, 'Các tỉnh thành còn lại'],
-          datasets: [{
-            label: mappingName[attributeName],
-            data: [provinceValue, otherProvincesSum],
-            backgroundColor: [
-              attributeColor,
-              'rgba(200, 200, 200, 0.6)'
-            ],
-            borderColor: [
-              'rgba(255, 255, 255, 1)',
-              'rgba(255, 255, 255, 1)'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          plugins: {
-            title: {
-              display: true,
-              text: mappingName[attributeName]
-            }
-          },
-          responsive: false,
-          cutoutPercentage: 35,
-          legend: {
-            position: "bottom"
-          },
-        }
-      });
     }
-
-    createPieChart('total_infected_cases', 'rgba(255, 99, 132, 0.6)', 'totalCasesChart');
-    createPieChart('today_infected_cases', 'rgba(54, 162, 235, 0.6)', 'todayCasesChart');
-    createPieChart('deaths', 'Deaths', 'deathsChart');
-    createPieChart('total_recovered_cases', 'rgba(75, 192, 192, 0.6)', 'recoveredChart');
-  }
+    
+    // Example function calls
+    createOrUpdatePieChart('total_infected_cases', 'rgba(255, 99, 132, 0.6)', 'totalCasesChart');
+    createOrUpdatePieChart('today_infected_cases', 'rgba(54, 162, 235, 0.6)', 'todayCasesChart');
+    createOrUpdatePieChart('deaths', 'rgba(255, 159, 64, 0.6)', 'deathsChart');
+    createOrUpdatePieChart('total_recovered_cases', 'rgba(75, 192, 192, 0.6)', 'recoveredChart');
+  }    
 
   return {
     createComboCharts: createComboCharts,
