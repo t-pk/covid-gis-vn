@@ -2,12 +2,11 @@ require([
   "esri/views/MapView",
   "esri/WebMap",
   "esri/widgets/Expand",
-  "esri/widgets/Bookmarks",
   "esri/core/promiseUtils",
   "esri/core/reactiveUtils",
   "./js/layerDataViewUtils.js",
   "./js/charts.js"
-], (MapView, WebMap, Expand, Bookmarks, promiseUtils, reactiveUtils, layerDataViewUtils, Chart) => {
+], (MapView, WebMap, Expand, promiseUtils, reactiveUtils, layerDataViewUtils, Chart) => {
 
   const webmap = new WebMap({ portalItem: { id: "1e254684c9bd41259e296eea06a0b1b0" } });
 
@@ -50,7 +49,6 @@ require([
     const csvData = {};
     let titleExpand;
     async function initExpandData() {
-      console.log("asdasd");
 
       const query = layer_csv.createQuery();
       query.where = buildWhereClause1();

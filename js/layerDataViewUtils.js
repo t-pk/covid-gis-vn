@@ -1,8 +1,9 @@
 define([
   "esri/core/reactiveUtils",
   "./js/layerQuery.js",
-], function (reactiveUtils, layerQuery) {
-
+  "esri/widgets/Expand",
+], function (reactiveUtils, layerQuery, Expand) {
+  let titleExpand;
   function updateLayerDataView(layerDataView, view, layer_map, csvData) {
     let dataLoaded = false;
     console.log("function updateLayerDataView(layerDataView, view, layer_map, csvData)");
@@ -12,24 +13,68 @@ define([
       "deaths": ["#e0e0e0", "#bdbdbd", "#9e9e9e", "#616161", "#000000"],
       "today_recovered_cases": ["#e8f5e9", "#c8e6c9", "#a5d6a7", "#66bb6a", "#2e7d32"]
     };
+    // Tạo hàm để hiển thị thông tin Legend dưới dạng HTML
+    function createLegendHTML(legendInfo) {
+      const container = document.createElement('div');
+      container.style.padding = '10px';
+      legendInfo.forEach(info => {
+        const legendItem = document.createElement('div');
+        legendItem.style.display = 'flex';
+        legendItem.style.alignItems = 'center';
+        legendItem.style.marginBottom = '5px';
 
+        // Tạo ô màu
+        const colorBox = document.createElement('span');
+        colorBox.style.width = '20px';
+        colorBox.style.height = '20px';
+        colorBox.style.backgroundColor = info.color;
+        colorBox.style.marginRight = '10px';
+
+        // Tạo nhãn cho mỗi ô màu
+        const label = document.createElement('span');
+        label.textContent = info.label;
+
+        legendItem.appendChild(colorBox);
+        legendItem.appendChild(label);
+        container.appendChild(legendItem);
+      });
+      return container;
+    }
+
+    // Hàm để tạo Expand widget
+    function createExpandWidget(view, legendInfo) {
+      const legendContainer = createLegendHTML(legendInfo);
+      console.log("legendContainer", legendContainer)
+      if (titleExpand) {
+        titleExpand.content = legendContainer;
+      } else {
+        titleExpand = new Expand({
+          view: view,
+          content: legendContainer,
+          expandIconClass: 'esri-icon-key',
+          expanded: true,
+          group: "bottom-left"
+        });
+      }
+      view.ui.add(titleExpand, 'bottom-left');
+    }
     async function queryAndUpdateLayer() {
       console.log("async function queryAndUpdateLayer()");
       const attribute = document.getElementById('attribute-select').value;
-      const { renderer } = await layerQuery.queryAndUpdateLayer(layerDataView, view, layer_map, csvData, attribute, colorSchemes);
-      console.log("renderer", renderer);
+      const { renderer, legendInfo } = await layerQuery.queryAndUpdateLayer(layerDataView, view, layer_map, csvData, attribute, colorSchemes);
+      createExpandWidget(view, legendInfo);
       dataLoaded = true;
       layer_map.renderer = renderer;
     }
-  
+
     async function retryQueryAndUpdateLayer() {
-      console.log("retryQueryAndUpdateLayer before",  dataLoaded);
+      console.log("retryQueryAndUpdateLayer before", dataLoaded);
       await queryAndUpdateLayer();
-      console.log("retryQueryAndUpdateLayer",  dataLoaded);
+      console.log("retryQueryAndUpdateLayer", dataLoaded);
 
       if (!dataLoaded) {
-        console.log("retryQueryAndUpdateLayer queryAndUpdateLayer",  dataLoaded);
-        console.log("retryQueryAndUpdateLayer queryAndUpdateLayer 1000",  dataLoaded);
+        console.log("retryQueryAndUpdateLayer queryAndUpdateLayer", dataLoaded);
+        console.log("retryQueryAndUpdateLayer queryAndUpdateLayer 1000", dataLoaded);
         setTimeout(retryQueryAndUpdateLayer, 1000);
       }
     };

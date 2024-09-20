@@ -1,73 +1,56 @@
 define([
   "./js/charts.js"
 ], function (Chart) {
-  function getColor(value, colors, attribute) {
-    if (attribute === "total_infected_cases") {
-      if (value < 100) {
-        return colors[0];
-      } else if (value <= 500) {
-        return colors[1];
-      } else if (value <= 1000) {
-        return colors[2];
-      } else if (value <= 5000) {
-        return colors[3];
-      } else {
-        return colors[4];
-      }
+  // Hàm để lấy ngưỡng (thresholds) cho mỗi attribute
+  function getThresholds(attribute) {
+    if (attribute === "total_infected_cases" || attribute === "today_infected_cases") {
+      return [100, 500, 1000, 5000];  // Ngưỡng cho infected cases
     }
-
     if (attribute === "today_recovered_cases") {
-      if (value < 100) {
-        return colors[0];
-      } else if (value <= 500) {
-        return colors[1];
-      } else if (value <= 1000) {
-        return colors[2];
-      } else if (value <= 5000) {
-        return colors[3];
-      } else {
-        return colors[4];
-      }
+      return [50, 100, 500, 1000];    // Ngưỡng cho recovered cases
     }
-
     if (attribute === "deaths") {
-      if (value < 100) {
+      return [20, 50, 100, 500];      // Ngưỡng cho deaths
+    }
+    return [];  // Trường hợp không hợp lệ, trả về rỗng
+  }
+
+  // Hàm getColor sử dụng thresholds
+  function getColor(value, colors, attribute) {
+    const thresholds = getThresholds(attribute);
+
+    if (thresholds.length > 0) {
+      if (value < thresholds[0]) {
         return colors[0];
-      } else if (value <= 200) {
+      } else if (value <= thresholds[1]) {
         return colors[1];
-      } else if (value <= 400) {
+      } else if (value <= thresholds[2]) {
         return colors[2];
-      } else if (value <= 1000) {
+      } else if (value <= thresholds[3]) {
         return colors[3];
       } else {
         return colors[4];
       }
     }
 
-    if (attribute === "today_infected_cases") {
-      if (value < 100) {
-        return colors[0];
-      } else if (value <= 500) {
-        return colors[1];
-      } else if (value <= 1000) {
-        return colors[2];
-      } else if (value <= 5000) {
-        return colors[3];
-      } else {
-        return colors[4];
-      }
-    }
     return colors[0];
   }
 
-  function getLegendInfo(min, max, colors) {
-    const range = max - min;
+  function getLegendInfo(attribute, colors) {
+    const thresholds = getThresholds(attribute);
+
+    if (thresholds.length > 0) {
+      return [
+        { label: `dưới ${thresholds[0]} `, color: colors[0] },
+        { label: `dưới ${thresholds[1]} `, color: colors[1] },
+        { label: `dưới ${thresholds[2]} `, color: colors[2] },
+        { label: `dưới ${thresholds[3]} `, color: colors[3] },
+        { label: `trên ${thresholds[3]} `, color: colors[4] }
+      ];
+    }
+
     return [
-      { label: `<= ${Math.round(min + range * 0.2)} ca`, color: colors[0] },
-      { label: `<= ${Math.round(min + range * 0.4)} ca`, color: colors[1] },
-      { label: `<= ${Math.round(min + range * 0.6)} ca`, color: colors[2] },
-      { label: `<= ${Math.round(min + range * 0.8)} ca`, color: colors[3] },
-      { label: `> ${Math.round(min + range * 0.8)} ca`, color: colors[4] }
+      { label: `0 `, color: colors[0] }
     ];
   }
 
@@ -111,9 +94,9 @@ define([
         returnGeometry: true,
         where: `date >= DATE '${startDate.toISOString().split('T')[0]}' AND date <= DATE '${endDate.toISOString().split('T')[0]}'`
       });
-  
+
       const graphics2 = results2.features;
-  
+
       // Chuyển đổi dữ liệu
       const provinceData1 = (graphics2 || []).map(graphic => {
         const attributes = graphic.attributes;
@@ -125,10 +108,10 @@ define([
           today_recovered_cases: attributes.today_recovered_cases || 0
         };
       });
-  
+
       // Gọi hàm tạo biểu đồ line
       Chart.createLineChart(provinceData1, 'lineChartCanvas', attribute);
-  
+
       if (graphics.length === 0) {
         view.openPopup({
           title: "No Data",
@@ -172,10 +155,13 @@ define([
           color: "#ffffff", outline: { width: 1, color: "black" }
         }
       };
+      const values = Object.values(csvData);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
 
-      // const legendInfo = getLegendInfo(min, max, colors);
-      // return { renderer, legendInfo };
-      return { renderer };
+      const legendInfo = getLegendInfo(attribute, colors);
+      return { renderer, legendInfo };
+      // return { renderer };
     } catch (error) {
       console.error("Query failed: ", error);
     }
