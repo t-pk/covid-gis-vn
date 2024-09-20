@@ -73,7 +73,6 @@ require([
 
     let currentHighlight = null;
 
-    // Wait for layer views to load
     const layerMapView = await view.whenLayerView(layer_map);
     const layerDataView = await view.whenLayerView(layer_csv);
     const csvData = {};
@@ -114,6 +113,13 @@ require([
         return `date = DATE '${dateInput}'`;
       }
 
+      function buildWhereClause2(dateInput, provinceInput) {
+        const endDate = new Date(dateInput);
+        const startDate = new Date(endDate);
+        startDate.setDate(endDate.getDate() - 59);
+        return `date >= DATE '${startDate.toISOString().split('T')[0]}' AND date <= DATE '${endDate.toISOString().split('T')[0]}' AND province = '${provinceInput}'`
+      }
+
       async function fetchAndDisplayData(query, event) {
         let responseData = await layerDataView.queryFeatures(query);
         let query1 = layer_csv.createQuery();
@@ -123,7 +129,11 @@ require([
         if (responseData.features.length > 0) {
           const provinceFromLayer0 = responseData.features[0];
           const provinceFromLayer1 = responseData1.features;
-          Chart.createProvinceCharts(provinceFromLayer0.attributes, provinceFromLayer1);
+          const query2 = layer_csv.createQuery();
+          query2.where = buildWhereClause2(provinceFromLayer0.attributes.date, provinceFromLayer0.attributes.province);
+          let responseData2 = await layerDataView.queryFeatures(query2);
+          Chart.createProvinceCharts(provinceFromLayer0.attributes, provinceFromLayer1, responseData2.features);
+
           view.openPopup({
             title: "Thông tin chi tiết",
             content: `
@@ -144,11 +154,9 @@ require([
         const queryCSV = layer_csv.createQuery();
         const provinceFromLayerData = responseMap.features[0].attributes.name;
 
-        // Initial query and display
         queryCSV.where = buildWhereClause(dateInput.value, provinceFromLayerData);
         fetchAndDisplayData(queryCSV, event);
 
-        // Add event listener for date changes
         dateInput.addEventListener('change', async (event) => {
           if (currentHighlight) {
             currentHighlight.remove();
@@ -173,7 +181,7 @@ require([
         }
         view.openPopup({
           title: "No data",
-          location: event.mapPoint, // Vị trí click
+          location: event.mapPoint,
           content: "No data available for this location."
         });
       }

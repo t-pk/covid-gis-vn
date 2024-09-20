@@ -13,7 +13,7 @@ define([], function () {
   };
   function createLineChart(provinceData, canvasId, attribute) {
     const ctx = document.getElementById(canvasId).getContext('2d');
-    if(lineChartInstance){
+    if (lineChartInstance) {
       lineChartInstance.destroy()
     }
     // Helper function to format timestamps as dd/mm
@@ -23,36 +23,32 @@ define([], function () {
       const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
       return `${day}/${month}`;
     }
-  
-    // Ensure data is sorted by date
+
     function sortDataByDate(data) {
       return data.sort((a, b) => new Date(a.date) - new Date(b.date));
     }
-  
-    // Aggregate data to have at most 15 points
+
     function aggregateData(data, maxPoints) {
       const interval = Math.ceil(data.length / maxPoints);
       const aggregatedData = [];
-  
+
       for (let i = 0; i < data.length; i += interval) {
         const slice = data.slice(i, i + interval);
         const aggregatedItem = slice.reduce((acc, item) => {
           acc[attribute] += item[attribute];
           return acc;
         }, { [attribute]: 0, date: slice[0].date });
-  
-        // Use the middle timestamp for label
+
         aggregatedItem.date = slice[Math.floor(slice.length / 2)].date;
         aggregatedData.push(aggregatedItem);
       }
-  
+
       return aggregatedData;
     }
-  
-    // Sort data by date before aggregation
+
     const sortedData = sortDataByDate(provinceData);
     const aggregatedData = aggregateData(sortedData, 30);
-  
+
     lineChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
@@ -84,15 +80,15 @@ define([], function () {
           y: {
             title: {
               display: true,
-              text: attribute
+              text: 'Số lượng'
             }
           }
         }
       }
     });
   }
-  
-  
+
+
   function createComboCharts(data, dateInput, attribute) {
     function filterDataByDate(provinceData, dateInput) {
       const currentDate = new Date(dateInput);
@@ -162,7 +158,10 @@ define([], function () {
       options: {
         scales: {
           y: {
-            beginAtZero: true
+            title: {
+              display: true,
+              text: 'Số lượng'
+            }
           }
         },
         plugins: {
@@ -174,7 +173,8 @@ define([], function () {
       }
     });
   }
-  function createProvinceCharts(provinceData, allData) {
+  function createProvinceCharts(provinceData, allData, provinceData1) {
+
     const ctx = document.getElementById('provinceChart').getContext('2d');
 
     if (provinceChartInstance) {
@@ -184,23 +184,20 @@ define([], function () {
     provinceChartInstance = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Tổng số ca nhiễm', 'Số ca nhiễm hôm nay', 'Tử vong', 'Hồi phục'],
+        labels: ['Số ca nhiễm trong ngày', 'Tử vong', 'Hồi phục'],
         datasets: [{
           label: provinceData.province,
           data: [
-            provinceData.total_infected_cases,
             provinceData.today_infected_cases,
             provinceData.deaths,
             provinceData.today_recovered_cases
           ],
           backgroundColor: [
-            'rgba(255, 99, 132, 0.6)',
             'rgba(54, 162, 235, 0.6)',
             'rgba(255, 206, 86, 0.6)',
             'rgba(75, 192, 192, 0.6)'
           ],
           borderColor: [
-            'rgba(255, 99, 132, 1)',
             'rgba(54, 162, 235, 1)',
             'rgba(255, 206, 86, 1)',
             'rgba(75, 192, 192, 1)'
@@ -236,10 +233,10 @@ define([], function () {
       const ctx = document.getElementById(canvasId).getContext('2d');
       const provinceValue = provinceData[attributeName];
       const otherProvincesSum = calculateOtherProvincesSum(attributeName);
-    
+
       const chartTitle = mappingName[attributeName];
       const labels = [provinceData.province, 'Các tỉnh thành còn lại'];
-    
+
       if (chartManager.charts[canvasId]) {
         const chart = chartManager.charts[canvasId];
         chart.data.labels = labels;
@@ -287,9 +284,131 @@ define([], function () {
     createOrUpdatePieChart('today_infected_cases', 'rgba(54, 162, 235, 0.6)', 'todayCasesChart');
     createOrUpdatePieChart('deaths', 'rgba(255, 159, 64, 0.6)', 'deathsChart');
     createOrUpdatePieChart('today_recovered_cases', 'rgba(75, 192, 192, 0.6)', 'recoveredChart');
-  }    
 
-  function clearProvinceCharts(){
+
+    function createMultiLineChart(provinceData2, canvasId) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+
+      function formatDate(timestamp) {
+        const date = new Date(timestamp);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return `${day}/${month}`;
+      }
+
+      function sortDataByDate(data) {
+        return data.sort((a, b) => new Date(a.attributes.date) - new Date(b.attributes.date));
+      }
+
+      function aggregateData(data, maxPoints) {
+        const interval = Math.ceil(data.length / maxPoints);
+        const aggregatedData = [];
+
+        for (let i = 0; i < data.length; i += interval) {
+          const slice = data.slice(i, i + interval);
+          const aggregatedItem = slice.reduce((acc, item) => {
+            acc.total_infected_cases += item.attributes.total_infected_cases;
+            acc.today_infected_cases += item.attributes.today_infected_cases;
+            acc.deaths += item.attributes.deaths;
+            acc.today_recovered_cases += item.attributes.today_recovered_cases;
+            return acc;
+          }, { total_infected_cases: 0, today_infected_cases: 0, deaths: 0, today_recovered_cases: 0, date: slice[0].attributes.date });
+
+          // Use the middle timestamp for label
+          aggregatedItem.date = slice[Math.floor(slice.length / 2)].attributes.date;
+          aggregatedData.push(aggregatedItem);
+        }
+
+        return aggregatedData;
+      }
+
+      // Sort data by date and aggregate it
+      const sortedData = sortDataByDate(provinceData2);
+      const aggregatedData = aggregateData(sortedData, 30); // Show 30 points
+      if (chartManager.charts[canvasId]) {
+        // Đã có biểu đồ, cập nhật dữ liệu
+        const chart = chartManager.charts[canvasId];
+
+        // Cập nhật lại labels (ngày tháng)
+        chart.data.labels = aggregatedData.map(item => formatDate(item.date));
+
+        // Cập nhật dữ liệu cho từng dataset (đường biểu diễn)
+        chart.data.datasets[0].data = aggregatedData.map(item => item.total_infected_cases);
+        chart.data.datasets[1].data = aggregatedData.map(item => item.today_infected_cases);
+        chart.data.datasets[2].data = aggregatedData.map(item => item.deaths);
+        chart.data.datasets[3].data = aggregatedData.map(item => item.today_recovered_cases);
+
+        // Cập nhật tiêu đề biểu đồ
+        chart.options.plugins.title.text = `Dữ liệu COVID-19 trong tỉnh ${provinceData.province} 60 ngày qua`;
+
+        // Cập nhật lại biểu đồ
+        chart.update();
+      } else {
+        chartManager.charts[canvasId] = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: aggregatedData.map(item => formatDate(item.date)),
+            datasets: [
+              {
+                label: 'Tổng số ca nhiễm',
+                data: aggregatedData.map(item => item.total_infected_cases),
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                fill: false
+              },
+              {
+                label: 'Tổng số ca nhiễm trong ngày hôm nay',
+                data: aggregatedData.map(item => item.today_infected_cases),
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                fill: false
+              },
+              {
+                label: 'Số ca tử vong trong ngày',
+                data: aggregatedData.map(item => item.deaths),
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                fill: false
+              },
+              {
+                label: 'Số ca hồi phục trong ngày',
+                data: aggregatedData.map(item => item.today_recovered_cases),
+                borderColor: 'rgba(153, 102, 255, 1)',
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: `Dữ liệu COVID-19 trong tỉnh ${provinceData.province} 60 ngày qua`
+              }
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'Ngày'
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: 'Số lượng'
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+    createMultiLineChart(provinceData1, 'multiLineChartCanvas');
+  }
+
+  function clearProvinceCharts() {
     provinceChartInstance.destroy();
     Object.keys(chartManager.charts).forEach((canvasId) => {
       if (chartManager.charts[canvasId]) {

@@ -76,7 +76,7 @@ define([
     const dateInput = document.getElementById('date-input');
     const endDate = new Date(dateInput.value);
     const startDate = new Date(endDate);
-    startDate.setDate(endDate.getDate() - 60); // 60 ngày trước
+    startDate.setDate(endDate.getDate() - 59); // 60 ngày trước
 
     try {
       const results = await layerDataView.queryFeatures({
