@@ -6,7 +6,7 @@ define([
   let titleExpand;
   function updateLayerDataView(layerDataView, view, layer_map, csvData) {
     let dataLoaded = false;
-    console.log("function updateLayerDataView(layerDataView, view, layer_map, csvData)");
+
     const colorSchemes = {
       "total_infected_cases": ["#ffedea", "#ffcec5", "#ffad9f", "#ff6f56", "#ef0000"],
       "today_infected_cases": ["#f3e5f5", "#e1bee7", "#ce93d8", "#ab47bc", "#6a1b9a"],
@@ -44,7 +44,7 @@ define([
     // Hàm để tạo Expand widget
     function createExpandWidget(view, legendInfo) {
       const legendContainer = createLegendHTML(legendInfo);
-      console.log("legendContainer", legendContainer)
+
       if (titleExpand) {
         titleExpand.content = legendContainer;
       } else {
@@ -59,7 +59,6 @@ define([
       view.ui.add(titleExpand, 'bottom-left');
     }
     async function queryAndUpdateLayer() {
-      console.log("async function queryAndUpdateLayer()");
       const attribute = document.getElementById('attribute-select').value;
       const { renderer, legendInfo } = await layerQuery.queryAndUpdateLayer(layerDataView, view, layer_map, csvData, attribute, colorSchemes);
       createExpandWidget(view, legendInfo);
@@ -68,13 +67,9 @@ define([
     }
 
     async function retryQueryAndUpdateLayer() {
-      console.log("retryQueryAndUpdateLayer before", dataLoaded);
       await queryAndUpdateLayer();
-      console.log("retryQueryAndUpdateLayer", dataLoaded);
 
       if (!dataLoaded) {
-        console.log("retryQueryAndUpdateLayer queryAndUpdateLayer", dataLoaded);
-        console.log("retryQueryAndUpdateLayer queryAndUpdateLayer 1000", dataLoaded);
         setTimeout(retryQueryAndUpdateLayer, 1000);
       }
     };
