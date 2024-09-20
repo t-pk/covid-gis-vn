@@ -24,19 +24,19 @@ body {
   overflow: scroll;
 }
 
-#num-homicides {
+#total-today-infected {
   color: #ed5050;
   font-size: 36pt;
   font-weight: bolder;
   line-height: 0.8;
 }
-#avg-age {
-  color: #149dcf;
+#total-recovered {
+  color: #2ea80f;
   font-size: 20pt;
   font-weight: bolder;
 }
-#avg-open-time {
-  color: #149dcf;
+#total-deaths {
+  color: #a01a95;
   font-size: 20pt;
   font-weight: bolder;
 }

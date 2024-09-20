@@ -19,43 +19,10 @@ require([
   titleContent.style.padding = "15px";
   titleContent.style.backgroundColor = "white";
   titleContent.style.width = "350px";
-  titleContent.innerHTML = [
-    "<div id='title' class='esri-widget'>",
-    "<span id='num-homicides'>0</span> homicides occurred within one mile of the pointer location over the last 10 years.",
-    "The average age of the victims is <span id='avg-age'>0</span>. The average time an unsolved case has been",
-    "open is <span id='avg-open-time'>0</span> years.",
-    "</div>"
-  ].join(" ");
-
-  const titleExpand = new Expand({
-    expandIcon: "dashboard",
-    expandTooltip: "Summary stats",
-    view: view,
-    content: titleContent,
-    expanded: view.widthBreakpoint !== "xsmall",
-    placement: "left-start",
-    group: "top-right"
-  });
-  view.ui.add(titleExpand, "top-right");
 
   reactiveUtils.watch(() => view.widthBreakpoint, (widthBreakpoint) => {
     titleExpand.expanded = widthBreakpoint !== "xsmall";
   });
-
-  const bookmarksWidget = new Bookmarks({ view: view });
-  const bookmarksExpand = new Expand({ view: view, content: bookmarksWidget, group: "top-right" });
-  view.ui.add(bookmarksExpand, "top-right");
-
-  bookmarksWidget.on("select-bookmark", (event) => { bookmarksExpand.expanded = false });
-
-  const sampleInstructions = document.createElement("div");
-  sampleInstructions.style.padding = "10px";
-  sampleInstructions.style.backgroundColor = "white";
-  sampleInstructions.style.width = "300px";
-  sampleInstructions.innerHTML = [
-    "<b>Drag</b> the pointer over the data to view stats",
-    "within one mile of the pointer location."
-  ].join(" ");
 
   async function initializeMap() {
     await view.when();
@@ -75,8 +42,55 @@ require([
 
     const layerMapView = await view.whenLayerView(layer_map);
     const layerDataView = await view.whenLayerView(layer_csv);
-    const csvData = {};
+    function buildWhereClause1() {
+      const dateInput = document.getElementById('date-input').value;
+      return `date = DATE '${dateInput}'`;
+    }
 
+    const csvData = {};
+    let titleExpand;
+    async function initExpandData() {
+      console.log("asdasd");
+
+      const query = layer_csv.createQuery();
+      query.where = buildWhereClause1();
+
+      const results = await layer_csv.queryFeatures(query);
+
+      let totalTodayInfected = 0;
+      let totalDeaths = 0;
+      let totalRecovered = 0;
+
+      results.features.forEach(feature => {
+        const attributes = feature.attributes;
+        totalTodayInfected += attributes.today_infected_cases || 0;
+        totalDeaths += attributes.deaths || 0;
+        totalRecovered += attributes.today_recovered_cases || 0;
+      });
+
+      titleContent.innerHTML = [
+        "<div id='title' class='esri-widget'>",
+        `<span id='total-today-infected'>${totalTodayInfected}</span> là tổng số ca nhiễm hôm nay.`,
+        `Tổng số ca tử vong hôm nay là <span id='total-deaths'>${totalDeaths}</span>.`,
+        `Số ca phục hồi, xuất viện là <span id='total-recovered'>${totalRecovered}</span>.`,
+        "</div>"
+      ].join(" ");
+      if (titleExpand) {
+        titleExpand.content = titleContent;
+      } else {
+        titleExpand = new Expand({
+          expandIcon: "dashboard",
+          expandTooltip: "Summary stats",
+          view: view,
+          content: titleContent,
+          expanded: view.widthBreakpoint !== "xsmall",
+          placement: "left-start",
+          group: "top-right"
+        });
+
+        view.ui.add(titleExpand, "top-right");
+      }
+    }
     promiseUtils.eachAlways([
       layerDataViewUtils
     ]).then(() => {
@@ -84,7 +98,7 @@ require([
     }).catch((error) => {
       console.error("Error loading modules: ", error);
     });
-
+    await initExpandData();
     view.on("click", async (event) => {
       event.stopPropagation();
 
@@ -106,11 +120,6 @@ require([
 
       function buildWhereClause(selectedDate, provinceFromLayerData) {
         return `date = DATE '${selectedDate}' AND province = '${provinceFromLayerData}'`;
-      }
-
-      function buildWhereClause1() {
-        const dateInput = document.getElementById('date-input').value;
-        return `date = DATE '${dateInput}'`;
       }
 
       function buildWhereClause2(dateInput, provinceInput) {
@@ -163,6 +172,7 @@ require([
             currentHighlight = null;
             Chart.clearProvinceCharts();
           }
+          await initExpandData();
         });
         const attribute = document.getElementById('attribute-select');
         attribute.addEventListener('change', async (event) => {
@@ -185,6 +195,10 @@ require([
           content: "No data available for this location."
         });
       }
+    });
+    const dateInput = document.getElementById('date-input');
+    dateInput.addEventListener('change', async (event) => {
+      await initExpandData();
     });
   }
 
