@@ -1,0 +1,13 @@
+@startuml
+
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 2. Yêu cầu thêm vaccine
+Browser -> Server: 2.1. Gửi thông tin vaccine
+Server -> Server: 2.2. Lưu thông tin vaccine
+Server -> Browser: 2.3. Thông báo thêm vaccine thành công
+Browser -> User: 2.4. Hiển thị thông báo
+@enduml

@@ -1,0 +1,11 @@
+@startuml
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 2. Yêu cầu đăng xuất
+Browser -> Server: 2.1. Thông báo đăng xuất
+Server -> Server: 2.2. Hủy phiên đăng nhập
+Server -> Browser: 2.3. Đăng xuất thành công
+Browser -> User: 2.4. Trở về trang đăng nhập

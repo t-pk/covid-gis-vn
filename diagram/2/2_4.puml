@@ -1,0 +1,13 @@
+@startuml
+
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 4. Yêu cầu xóa vaccine
+Browser -> Server: 4.1. Gửi yêu cầu xóa vaccine
+Server -> Server: 4.2. Xóa vaccine khỏi hệ thống
+Server -> Browser: 4.3. Thông báo xóa vaccine thành công
+Browser -> User: 4.4. Hiển thị thông báo
+@enduml

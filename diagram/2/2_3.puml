@@ -1,0 +1,13 @@
+@startuml
+
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 3. Yêu cầu sửa thông tin vaccine
+Browser -> Server: 3.1. Gửi thông tin vaccine cần sửa
+Server -> Server: 3.2. Cập nhật thông tin vaccine
+Server -> Browser: 3.3. Thông báo sửa thông tin thành công
+Browser -> User: 3.4. Hiển thị thông báo
+@enduml
