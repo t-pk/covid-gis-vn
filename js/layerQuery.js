@@ -1,21 +1,20 @@
 define([
   "./js/charts.js"
 ], function (Chart) {
-  // Hàm để lấy ngưỡng (thresholds) cho mỗi attribute
+
   function getThresholds(attribute) {
     if (attribute === "total_infected_cases" || attribute === "today_infected_cases") {
-      return [100, 500, 1000, 5000];  // Ngưỡng cho infected cases
+      return [100, 500, 1000, 5000];
     }
     if (attribute === "today_recovered_cases") {
-      return [50, 100, 500, 1000];    // Ngưỡng cho recovered cases
+      return [50, 100, 500, 1000];
     }
     if (attribute === "deaths") {
-      return [20, 50, 100, 500];      // Ngưỡng cho deaths
+      return [20, 50, 100, 500];
     }
-    return [];  // Trường hợp không hợp lệ, trả về rỗng
+    return [];
   }
 
-  // Hàm getColor sử dụng thresholds
   function getColor(value, colors, attribute) {
     const thresholds = getThresholds(attribute);
 
@@ -97,7 +96,6 @@ define([
 
       const graphics2 = results2.features;
 
-      // Chuyển đổi dữ liệu
       const provinceData1 = (graphics2 || []).map(graphic => {
         const attributes = graphic.attributes;
         return {
@@ -109,7 +107,6 @@ define([
         };
       });
 
-      // Gọi hàm tạo biểu đồ line
       Chart.createLineChart(provinceData1, 'lineChartCanvas', attribute);
 
       if (graphics.length === 0) {
@@ -155,13 +152,10 @@ define([
           color: "#ffffff", outline: { width: 1, color: "black" }
         }
       };
-      const values = Object.values(csvData);
-      const min = Math.min(...values);
-      const max = Math.max(...values);
 
       const legendInfo = getLegendInfo(attribute, colors);
       return { renderer, legendInfo };
-      // return { renderer };
+
     } catch (error) {
       console.error("Query failed: ", error);
     }
