@@ -1,22 +1,22 @@
-@startuml
+@startuml "forgot password"
 skin rose
 actor "Người Dùng" as User
 participant "Trình Duyệt" as Browser
 participant "Hệ Thống" as Server
 
-User -> Browser: 3. Yêu cầu quên mật khẩu
-Browser -> Server: 3.1. Gửi tên đăng nhập
-Server -> Server: 3.2. Kiểm tra tên đăng nhập
+User -> Browser: 1. Yêu cầu quên mật khẩu
+Browser -> Server: 2. Gửi tên đăng nhập
+Server -> Server: 3. Kiểm tra tên đăng nhập
 alt Tên đăng nhập tồn tại
-    Server -> User: 3.3. Gửi liên kết đặt lại mật khẩu qua email
-    User -> Browser: 3.4. Nhấp vào liên kết trong email
-    Browser -> Server: 3.5. Gửi yêu cầu đặt lại mật khẩu
-    User -> Browser: 3.6. Nhập mật khẩu mới
-    Browser -> Server: 3.7. Cập nhật mật khẩu mới
-    Server -> Browser: 3.8. Đặt lại mật khẩu thành công
-    Browser -> User: 3.9. Thông báo thành công
+    Server -> User: 4. Gửi liên kết đặt lại mật khẩu qua email
+    User -> Browser: 5. Nhấp vào liên kết trong email
+    Browser -> Server: 6. Gửi yêu cầu đặt lại mật khẩu
+    User -> Browser: 7. Nhập mật khẩu mới
+    Browser -> Server: 8. Cập nhật mật khẩu mới
+    Server -> Browser: 9. Đặt lại mật khẩu thành công
+    Browser -> User: 10. Thông báo thành công
 else Tên đăng nhập không tồn tại
-    Server -> Browser: 3.10. Thông báo lỗi
-    Browser -> User: 3.11. Thông báo tên đăng nhập không tồn tại
+    Server -> Browser: 11. Thông báo lỗi
+    Browser -> User: 12. Thông báo tên đăng nhập không tồn tại
 end
 @enduml

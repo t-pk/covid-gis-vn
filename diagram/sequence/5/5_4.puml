@@ -1,18 +1,18 @@
-@startuml "get vaccine"
+@startuml "xoa dich benh"
 
 skin rose
 actor "Người Dùng" as User
 participant "Trình Duyệt" as Browser
 participant "Hệ Thống" as Server
 
-User -> Browser: 1. Yêu cầu xem danh sách vaccine
+User -> Browser: 1. Yêu cầu xóa dịch bệnh
 Browser -> Server: 2. Kiểm tra người dùng đã đăng nhập
 alt Người dùng đã đăng nhập
     Browser -> Server: 3. Kiểm tra quyền người dùng
     alt Có quyền
-        Server -> Server: 4. Truy xuất danh sách vaccine
-        Server -> Browser: 5. Gửi danh sách vaccine
-        Browser -> User: 6. Hiển thị danh sách vaccine
+        Browser -> Server: 4. Gửi yêu cầu xóa dịch bệnh
+        Server -> Browser: 5. Thông báo xóa dịch bệnh thành công
+        Browser -> User: 6. Hiển thị thông báo
     else Không có quyền
         Server -> Browser: 7. Thông báo không có quyền
         Browser -> User: 8. Hiển thị thông báo không có quyền

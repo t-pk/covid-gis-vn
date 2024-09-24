@@ -1,18 +1,19 @@
-@startuml "Create vaccine"
+@startuml "xem benh nhan"
 
 skin rose
 actor "Người Dùng" as User
 participant "Trình Duyệt" as Browser
 participant "Hệ Thống" as Server
 
-User -> Browser: 1. Yêu cầu thêm vaccine
+
+User -> Browser: 1. Yêu cầu thêm bệnh nhân
 Browser -> Server: 2. Kiểm tra người dùng đã đăng nhập
 alt Người dùng đã đăng nhập
     Browser -> Server: 3. Kiểm tra quyền người dùng
     alt Có quyền
-        Browser -> Server: 4. Gửi thông tin vaccine
-        Server -> Server: 5. Lưu thông tin vaccine
-        Server -> Browser: 6. Thông báo thêm vaccine thành công
+        Browser -> Server: 4. Gửi thông tin bệnh nhân
+        Server -> Server: 5. Lưu thông tin bệnh nhân
+        Server -> Browser: 6. Thông báo thêm bệnh nhân thành công
         Browser -> User: 7. Hiển thị thông báo
     else Không có quyền
         Server -> Browser: 8. Thông báo không có quyền

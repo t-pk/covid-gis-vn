@@ -1,0 +1,24 @@
+@startuml "xem dich benh"
+
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 1. Yêu cầu xem danh sách dịch bệnh
+Browser -> Server: 2. Kiểm tra người dùng đã đăng nhập
+alt Người dùng đã đăng nhập
+    Browser -> Server: 3. Kiểm tra quyền người dùng
+    alt Có quyền
+        Server -> Browser: 4. Gửi danh sách dịch bệnh
+        Browser -> User: 5. Hiển thị danh sách dịch bệnh
+    else Không có quyền
+        Server -> Browser: 6. Thông báo không có quyền
+        Browser -> User: 7. Hiển thị thông báo không có quyền
+    end
+else Người dùng chưa đăng nhập
+    Server -> Browser: 8. Thông báo cần đăng nhập
+    Browser -> User: 9. Hiển thị thông báo cần đăng nhập
+end
+
+@enduml
