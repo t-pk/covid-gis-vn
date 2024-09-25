@@ -384,7 +384,7 @@ define([], function () {
             plugins: {
               title: {
                 display: true,
-                text: `Dữ liệu COVID-19 trong tỉnh ${provinceData.province} 60 ngày qua`
+                text: `Dữ liệu COVID-19 trong tỉnh ${provinceData.province} 30 ngày qua`
               }
             },
             scales: {
