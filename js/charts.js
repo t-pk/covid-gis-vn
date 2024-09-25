@@ -324,7 +324,7 @@ define([], function () {
 
       // Sort data by date and aggregate it
       const sortedData = sortDataByDate(provinceData2);
-      const aggregatedData = aggregateData(sortedData, 30); // Show 30 points
+      const aggregatedData = aggregateData(sortedData, 30); //
       if (chartManager.charts[canvasId]) {
         // Đã có biểu đồ, cập nhật dữ liệu
         const chart = chartManager.charts[canvasId];
@@ -339,7 +339,7 @@ define([], function () {
         chart.data.datasets[3].data = aggregatedData.map(item => item.today_recovered_cases);
 
         // Cập nhật tiêu đề biểu đồ
-        chart.options.plugins.title.text = `Dữ liệu COVID-19 trong tỉnh ${provinceData.province} 60 ngày qua`;
+        chart.options.plugins.title.text = `Dữ liệu COVID-19 trong tỉnh ${provinceData.province} 30 ngày qua`;
 
         // Cập nhật lại biểu đồ
         chart.update();

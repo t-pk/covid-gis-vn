@@ -123,7 +123,7 @@ require([
       function buildWhereClause2(dateInput, provinceInput) {
         const endDate = new Date(dateInput);
         const startDate = new Date(endDate);
-        startDate.setDate(endDate.getDate() - 59);
+        startDate.setDate(endDate.getDate() - 29);
         return `date >= DATE '${startDate.toISOString().split('T')[0]}' AND date <= DATE '${endDate.toISOString().split('T')[0]}' AND province = '${provinceInput}'`
       }
 
