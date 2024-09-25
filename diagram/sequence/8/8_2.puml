@@ -1,0 +1,12 @@
+@startuml
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 1. Yêu cầu xem chi tiết một dịch bệnh
+Browser -> Server: 2. Gửi yêu cầu chi tiết dịch bệnh
+Server -> Server: 3. Lấy thông tin chi tiết dịch bệnh
+Server -> Browser: 4. Gửi dữ liệu chi tiết dịch bệnh
+Browser -> User: 5. Hiển thị chi tiết dịch bệnh
+@enduml

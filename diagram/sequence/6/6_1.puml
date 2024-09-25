@@ -1,0 +1,12 @@
+@startuml "danh sach vaccine"
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 1. Yêu cầu xem danh sách vaccine
+Browser -> Server: 2. Gửi yêu cầu đến hệ thống
+Server -> Browser: 3. Gửi danh sách vaccine
+Browser -> User: 4. Hiển thị danh sách vaccine
+
+@enduml

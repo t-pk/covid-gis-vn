@@ -1,0 +1,16 @@
+@startuml
+
+skin rose
+
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+
+User -> Browser: 1. Yêu cầu xem bản đồ dịch bệnh
+Browser -> Server: 2. Gửi yêu cầu đến hệ thống
+Server -> Server: 3. Lấy dữ liệu bản đồ dịch bệnh
+Server -> Browser: 4. Gửi dữ liệu bản đồ dịch bệnh
+Browser -> User: 5. Hiển thị bản đồ dịch bệnh qua GIS và Chart
+
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+skin rose
+participant "Hệ Thống" as Server
+participant "Dữ Liệu Bệnh Nhân" as PatientDB
+participant "Dữ Liệu Thống Kê" as StatisticsDB
+
+Server -> PatientDB: 1. Kiểm tra thay đổi trong dữ liệu bệnh nhân
+alt Dữ liệu bệnh nhân thay đổi (thêm, sửa, xóa)
+    PatientDB -> Server: 2. Xác nhận có thay đổi
+
+    Server -> Server: 3. Phân tích thay đổi (thêm, sửa, xóa)
+    alt Thêm mới bệnh nhân
+        Server -> StatisticsDB: 3.1 Tăng tổng số ca nhiễm và tổng số ca nhiễm theo ngày
+    else Cập nhật trạng thái bệnh nhân (tử vong hoặc hồi phục)
+        Server -> StatisticsDB: 3.2 Cập nhật tổng số ca tử vong hoặc hồi phục theo ngày
+    else Xóa bệnh nhân
+        Server -> StatisticsDB: 3.3 Điều chỉnh số liệu thống kê liên quan
+    end
+
+    StatisticsDB -> Server: 4. Xác nhận cập nhật thống kê thành công
+else Không có thay đổi
+    PatientDB -> Server: Không cần cập nhật thống kê
+end
+@enduml

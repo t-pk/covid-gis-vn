@@ -1,0 +1,12 @@
+@startuml "chi tiet vaccine"
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 1. Yêu cầu xem thông tin chi tiết vaccine
+Browser -> Server: 2. Gửi yêu cầu đến hệ thống
+Server -> Browser: 3. Gửi thông tin chi tiết vaccine
+Browser -> User: 4. Hiển thị thông tin chi tiết vaccine
+
+@enduml

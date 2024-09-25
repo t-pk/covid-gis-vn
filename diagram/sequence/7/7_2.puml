@@ -1,0 +1,14 @@
+@startuml
+
+skin rose
+
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 1. Yêu cầu xem chi tiết dịch bệnh theo tỉnh
+Browser -> Server: 2. Gửi yêu cầu đến hệ thống
+Server -> Server: 3. Lấy thông tin chi tiết theo tỉnh, ngày, thuộc tính
+Server -> Browser: 4. Gửi dữ liệu chi tiết dịch bệnh
+Browser -> User: 5. Hiển thị chi tiết dịch bệnh qua GIS và Chart
+@enduml
