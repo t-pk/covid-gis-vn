@@ -1,4 +1,4 @@
-@startuml "xem benh nhan"
+@startuml "tao moi benh nhan"
 
 skin rose
 actor "Người Dùng" as User

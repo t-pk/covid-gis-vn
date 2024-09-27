@@ -68,11 +68,12 @@ require([
 
       titleContent.innerHTML = [
         "<div id='title' class='esri-widget'>",
-        `<span id='total-today-infected'>${totalTodayInfected}</span> là tổng số ca nhiễm hôm nay.`,
-        `Tổng số ca tử vong hôm nay là <span id='total-deaths'>${totalDeaths}</span>.`,
-        `Số ca phục hồi, xuất viện là <span id='total-recovered'>${totalRecovered}</span>.`,
+        `<span id='total-today-infected' class='text-red-500 font-bold text-2xl'>${totalTodayInfected}</span> là tổng số ca nhiễm hôm nay.`,
+        `Tổng số ca tử vong hôm nay là <span id='total-deaths' class='text-gray-700 font-bold text-2xl'>${totalDeaths}</span>.`,
+        `Số ca phục hồi, xuất viện là <span id='total-recovered' class='text-green-500 font-bold text-2xl'>${totalRecovered}</span>.`,
         "</div>"
       ].join(" ");
+      
       if (titleExpand) {
         titleExpand.content = titleContent;
       } else {
@@ -144,15 +145,18 @@ require([
           view.openPopup({
             title: "Thông tin chi tiết",
             content: `
-                    <b>Province:</b> ${provinceFromLayer0.attributes.province}<br>
-                    <b>Total Infected Cases:</b> ${provinceFromLayer0.attributes.total_infected_cases}<br>
-                    <b>Today's Infected Cases:</b> ${provinceFromLayer0.attributes.today_infected_cases}<br>
-                    <b>Deaths:</b> ${provinceFromLayer0.attributes.deaths}<br>
-                    <b>Today Recovered Cases:</b> ${provinceFromLayer0.attributes.today_recovered_cases}<br>
-                    <b>Date:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}
+              <div class="p-4">
+                <p><b class="text-blue-700">Tỉnh:</b> ${provinceFromLayer0.attributes.province}</p>
+                <p><b class="text-red-500">Tổng số ca nhiễm:</b> <span class="font-bold text-xl">${provinceFromLayer0.attributes.total_infected_cases}</span></p>
+                <p><b class="text-yellow-500">Số ca nhiễm hôm nay:</b> <span class="font-bold text-lg">${provinceFromLayer0.attributes.today_infected_cases}</span></p>
+                <p><b class="text-gray-700">Số ca tử vong:</b> <span class="font-bold text-red-600 text-lg">${provinceFromLayer0.attributes.deaths}</span></p>
+                <p><b class="text-green-500">Số ca phục hồi hôm nay:</b> <span class="font-bold text-lg">${provinceFromLayer0.attributes.today_recovered_cases}</span></p>
+                <p><b class="text-gray-500">Ngày:</b> ${new Date(provinceFromLayer0.attributes.date).toLocaleDateString()}</p>
+              </div>
             `,
             location: event.mapPoint
           });
+          
         }
       }
 
