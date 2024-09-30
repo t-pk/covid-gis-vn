@@ -1,0 +1,13 @@
+@startuml
+skin rose
+actor "Người Dùng" as User
+participant "Trình Duyệt" as Browser
+participant "Hệ Thống" as Server
+
+User -> Browser: 1. Yêu cầu xem danh sách tỉnh thành
+Browser -> Server: 2. Gửi yêu cầu xem danh sách tỉnh thành
+Server -> Server: 3. Lấy dữ liệu danh sách tỉnh thành
+Server -> Browser: 4. Gửi danh sách tỉnh thành
+Browser -> User: 5. Hiển thị danh sách tỉnh thành
+
+@enduml
