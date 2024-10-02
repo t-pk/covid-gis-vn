@@ -1,9 +1,8 @@
 @startuml
-' skinparam classAttributeStyle {
-'     <<stereotype>>: #FF9800
-'     <<property>>: #000000
-' }
-
+skinparam entity {
+    stereotypeBackgroundColor #FF9800
+    attributeTextColor #000000
+}
 entity Admin {
     int ID PK
     string Name
@@ -81,21 +80,21 @@ entity Relative {
     int PatientID FK
 }
 
-entity vaccine_city {
+entity Vaccine_city {
     int ID PK
     int VaccineID FK
     int CityID FK
     int Amount
 }
 
-entity vaccine_city_treatmentarea {
+entity Vaccine_city_treatmentarea {
     int ID PK
     int VaccineCityId FK
     int TreatmentAreaId FK
     int Amount
 }
 
-entity vaccine_patient {
+entity Vaccine_patient {
     int ID PK
     int VaccineCityTreatmentAreaId FK
     int PatientId FK
@@ -106,15 +105,15 @@ Admin ||--o{ TaskForce : manages
 TaskForce ||--|{ Pandemic : responds_to
 Pandemic ||--o{ Vaccine : includes_vaccine
 Pandemic ||--o{ CityProvince : impacts
-Vaccine ||--o{ vaccine_city : allocate
+Vaccine ||--o{ Vaccine_city : allocate
 CityProvince ||--o{ TreatmentArea : has
 CityProvince ||--o{ Statistics : reports_statistics
-CityProvince ||--o{ vaccine_city : receives
-vaccine_city ||--o{ vaccine_city_treatmentarea : allocates_to
-TreatmentArea ||--o{ vaccine_city_treatmentarea : receives
+CityProvince ||--o{ Vaccine_city : receives
+Vaccine_city ||--o{ Vaccine_city_treatmentarea : allocates_to
+TreatmentArea ||--o{ Vaccine_city_treatmentarea : receives
 TreatmentArea ||--o{ Patient : treats
 Patient ||--o{ Relative : has
-vaccine_city_treatmentarea ||--o{ vaccine_patient: allocates_to
-Patient ||--o{ vaccine_patient : has_vaccination_history
+Vaccine_city_treatmentarea ||--o{ Vaccine_patient: allocates_to
+Patient ||--o{ Vaccine_patient : has_vaccination_history
 
 @enduml
